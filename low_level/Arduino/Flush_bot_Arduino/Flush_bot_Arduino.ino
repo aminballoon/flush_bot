@@ -1,16 +1,28 @@
-#define dirPin 4
-#define stepPin 5
-#define stepsPerRevolution 1600
+#include <AccelStepper.h>
+#include <MultiStepper.h>
+#define dirPin 10
+#define stepPin 11
+#define motorInterfaceType 1
+AccelStepper stepper = AccelStepper(motorInterfaceType, stepPin, dirPin);
+//stepper.direction();
+
 void setup() {
+  
   Serial.begin(115200);
   pinMode(stepPin, OUTPUT);
   pinMode(dirPin, OUTPUT);
-  pinMode(A5, INPUT);
-  while (digitalRead(A5))
+  pinMode(8, INPUT);
+  
+  while (digitalRead(8))
   {
-    drive_up(1);
+    drive_down(1);
   }
+stepper.setMaxSpeed(6400);
+stepper.setAcceleration(3200);
+
 }
+
+
 byte head;
 byte addr;
 byte start;
@@ -28,6 +40,7 @@ void clearbuffer() {
   }
 }
 void loop() {
+  Serial.println(digitalRead(8));
   if (Serial.available() >= 7) {
     for (int i = 0; i < 7; i++) {
       package[i] = Serial.read();
@@ -50,25 +63,32 @@ void loop() {
     //      Serial.write(package[6]);
 
     //        Serial.print(package[6]);
+    Serial.println(stepper.currentPosition());
+    Serial.println(data_z * 20);
+    stepper.moveTo(data_z * 20);
+    stepper.runToPosition();
+    Serial.println(stepper.currentPosition());
 
-    if (data_z !=  pose_z)
-    {
-      goal_z = pose_z - data_z ;
-      Serial.println(goal_z);
-      Serial.println(data_z);
-      Serial.println(pose_z);
-      if (goal_z > 0)
-      {
-        drive_up((abs(pose_z)-abs(data_z)) * 42);
-        pose_z = data_z;
-      }
-      else if (goal_z < 0)
-      {
-        drive_down((abs(pose_z)-abs(data_z)) * -42);
-        pose_z = data_z;
-      }
-      
-    }
+//    if (data_z !=  pose_z)
+//    {
+//      stepper.moveTo(data_z * 20);
+//      stepper.runToPosition();
+//      goal_z = pose_z - data_z ;
+//      Serial.println(goal_z);
+//      Serial.println(data_z);
+//      Serial.println(pose_z);
+//      if (goal_z > 0)
+//      {
+//        drive_up((abs(pose_z)-abs(data_z)) * 42);
+//        pose_z = data_z;
+//      }
+//      else if (goal_z < 0)
+//      {
+//        drive_down((abs(pose_z)-abs(data_z)) * -42);
+//        pose_z = data_z;
+//      }
+//      
+//    }
     
   }
 }
@@ -92,8 +112,4 @@ void drive_down(int r) {
     digitalWrite(stepPin, LOW);
     delayMicroseconds(800);
   }
-}
-
-int map(int x, int in_min, int in_max, int out_min, int out_max) {
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }

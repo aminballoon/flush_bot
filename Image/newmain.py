@@ -281,6 +281,8 @@ def new_find_point_symbol():
         #             cv2.waitKey(0)
         img3 = cv2.drawMatches(image_gray, keypoints_1, symbol, keypoints_2, matches, symbol, flags=2)
         cv2.imshow("swqe",img3)
+
+
 # def new_connected_symbol_path()
 #     global list_all_point_path ,image ,list_contours_box_symbol ,list_contours_path
     
@@ -304,7 +306,7 @@ if __name__ == "__main__":
     list_point_connected = []
     list_symbol_template = [cv2.imread(file,0) for file in glob.glob(r'C:\Users\aminb\Desktop\FIBO\Image\symbol_module\*.jpg')]
 
-    image = cv2.imread(r'C:\Users\aminb\Desktop\FIBO\Image\Moduel_image\field_mult_median.jpg')
+    image = cv2.imread(r'C:\Users\aminb\Desktop\FIBO\Image\Moduel_image\messageImage_1604660857654.jpg')
 
     # kernel = np.array([[-1,-1,-1],
     #                 [-1, 9,-1],
@@ -327,7 +329,7 @@ if __name__ == "__main__":
 
     # kernel = np.ones((3,3))
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
-    image_dilation = cv2.dilate(image_edge,kernel,iterations = 5)
+    image_dilation = cv2.dilate(image_edge,kernel,iterations = 3)
     image_closing = cv2.morphologyEx(image_dilation, cv2.MORPH_CROSS, kernel) #cv2.MORPH_CROSS
     
     
@@ -342,14 +344,15 @@ if __name__ == "__main__":
     
     print("Number of Contours found = " + str(len(contours))) 
 
-    # for i in range(0,len(contours)):
-    #     cv2.drawContours(image,contours,i,(0,0,255))
-    #     cv2.imshow("img_shoqwewwww",image) 
-    #     cv2.waitKey(0)
+    for i in range(0,len(contours)):
+        sssse = np.zeros((resolution_X, resolution_Y, 1), np.uint8)
+        cv2.drawContours(sssse,contours,i,(0,0,255))
+        cv2.imshow("img_shoqwewwww",sssse) 
+        cv2.waitKey(0)
 
     add_point_to_list(hierarchy.tolist()[0]) 
     connected_symbol_path(list_contours_box_symbol,const = 30,draw=True)
-    # find_point_symbol(list_symbol_template)
+    find_point_symbol(list_symbol_template)
     # new_find_point_symbol()
     print(list_contours_path)
     thin_point_path(list_contours_path,draw=True)

@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
+import json
 
-image = cv2.imread(r'C:\Users\aminb\Desktop\FIBO\Image\merge_real_6.png')
+image = cv2.imread(r'C:\Users\aminb\Desktop\FIBO\Image\Moduel_image\messageImage_1604660857654.jpg')
 # image = cv2.medianBlur(image,9)
 # kernel = np.array([[-1,-1,-1],
 #                     [-1, 9,-1],
@@ -28,6 +29,7 @@ def add_point_to_list(hie):
                 list_contours_box_symbol.append(hie.index(i))
             if Child_check_path:
                 list_contours_path.append(hie.index(i))
+
 
 cv2.namedWindow("image_blur")
 Kernel_blur = 1
@@ -123,3 +125,32 @@ while(1):
     
     minArea = cv2.getTrackbarPos("minArea","image_contour")
     maxArea = cv2.getTrackbarPos("maxArea","image_contour")
+
+    data = {}
+    data['Parameter'] = []
+    data['Parameter'].append({
+        'Kernel_blur': (int(((Kernel_blur+1)/2)-1)),
+        'Canny_Thres_1': Canny_Thres_1,
+        'Canny_Thres_2': Canny_Thres_2,
+        'Kernel_morp': (int(((Kernel_morp+1)/2)-1)),
+        'Mode_morp': Mode_morp,
+        'iterations': iterations,
+        'minArea:' : minArea,
+        'maxArea': int(maxArea/100)
+    })
+
+
+    # data['blur'].append({
+    #     'name': 'Larry',
+    #     'website': 'google.com',
+    #     'from': 'Michigan'
+    # })
+    # data['blur'].append({
+    #     'name': 'Tim',
+    #     'website': 'apple.com',
+    #     'from': 'Alabama'
+    # })
+
+with open(r'C:\Users\aminb\Desktop\FIBO\Image\Moduel_image\parameter.json', 'w') as outfile:
+    json.dump(data, outfile)
+
