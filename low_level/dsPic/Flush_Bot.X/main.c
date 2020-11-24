@@ -145,8 +145,8 @@ int package_uart(unsigned char data) {
             checksum = ~checksum;
             checksum = checksum & 0xFF;
             if (checksum == data) {
-                Position_X += delta_x;
-                Position_Y += delta_x;
+//                Position_X += delta_x;
+//                Position_Y += delta_x;
                 //                Position_X += delta_x; float(POS1CNT)
                 //                Position_Y += delta_y; float(POS2CNT)
                 delta_x = (float) pose_x_UART - Position_X;
@@ -176,14 +176,14 @@ int package_uart(unsigned char data) {
 
 //                                printf("%.2f\t", Trajectory_Time);
 //                                printf("%.2f\n", Trajectory_Magnitude);
-                //                printf("%.2f\t", Position_X);
-                //                printf("%.2f\t", Position_Y);
-                //                printf("%.2f\t", delta_x);
-                //                printf("%.2f\t", delta_y);
-                //                Position_X += delta_x;
-                //                Position_Y += delta_y;
-                //                printf("%.2f\t", Position_X);
-                //                printf("%.2f\n", Position_Y);
+//                                printf("%.2f\t", Position_X);
+//                                printf("%.2f\t", Position_Y);
+//                                printf("%.2f\t", delta_x);
+//                                printf("%.2f\t", delta_y);
+//                                Position_X += delta_x;
+//                                Position_Y += delta_y;
+//                                printf("%.2f\t", Position_X);
+//                                printf("%.2f\n", Position_Y);
                 result = 0xAC;
 
                 T1CONbits.TON = 1;
@@ -366,6 +366,8 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
         SumError_velcont[1] = 0.0;
         Driver_motor_X(0);
         Driver_motor_Y(0);
+        Position_X = Encoder[0];
+        Position_Y = Encoder[1];
 
         //        Position_X = Encoder[0];
         //        Position_Y = Encoder[1];
@@ -382,10 +384,10 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 
         T1CONbits.TON = 0;
     }
-//    printf("%.2f\t", Position_Y_Goal);
-//    printf("%.2f\t", Encoder[1]);
-//    printf("%.2f\t", Velocity_Y);
-//    printf("%.2f\t", Velocity_Kalman[1]);
+    printf("%.2f\t", Position_Y_Goal);
+    printf("%.2f\t", Encoder[1]);
+    printf("%.2f\t", Velocity_Y);
+    printf("%.2f\t", Velocity_Kalman[1]);
     //        printf("%.2f\t", Output_velcont[0]);
     //        printf("%.2f\t", Error_velcont[0]);
     //        printf("%.2f\t", Output_velcont[1]);
