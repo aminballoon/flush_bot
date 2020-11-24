@@ -7,16 +7,21 @@
 
 #include "xc.h"
 #include <stdio.h>
+#include <stdbool.h>
 #include "configuration.h"
+#include <math.h>
 
 #define ID 0x40
 volatile int uartbuf = 0;
-volatile long int pose_x = 0;
-volatile long int pose_y = 0;
-
-float error[2] = {0.0, 0.0};
-float encoder[2] = {0.0, 0.0};
-float output[2] = {0.0, 0.0};
+volatile float Position_X = 0;
+volatile float Position_X_Goal = 0;
+volatile float Position_Y = 0;
+volatile float Position_Y_Goal = 0;
+volatile float Velocity_X = 0;
+volatile float Velocity_Y = 0;
+volatile float Error_posecont[2] = {0.0, 0.0};
+volatile float Encoder[2] = {0.0, 0.0};
+volatile float Output_posecont[2] = {0.0, 0.0};
 
 const float Kp_x = 1.0;
 const float Ki_x = 0.0;
@@ -26,71 +31,180 @@ const float Kp_y = 1.0;
 const float Ki_y = 0.0;
 const float Kd_y = 0.0;
 
-float pre_pose[2] = {0.0,0.0};
-float CONT = 0.01;
-float v[2] = {0.0,0.0};
-float sigma_a[2] = {11.0,11.0}; // adjustable
-float sigma_w[2] = {0.8,0.8}; // adjustable
+float Input_velcont[2] = {0.0, 0.0};
+float Error_velcont[2] = {0.0, 0.0};
+float Output_velcont[2] = {0.0, 0.0};
+float SumError_velcont[2] = {0.0, 0.0};
+float PreError_velcont[2] = {0.0, 0.0};
+
+float Pre_position_fixwindow[2] = {0.0, 0.0};
+const float CONT = 0.005;
+float Trajectory_Time_Now = 0.0;
+float Velocity_Input_Kalman[2] = {0.0, 0.0};
+float sigma_a[2] = {14.0, 14.0}; // adjustable 14
+float sigma_w[2] = {0.8, 0.8}; // adjustable 0.8
 //float w_update[2] = {0.0};
 //float w_inKalman[2] = {0.0};
 //float w_outKalman[2] = {0.0};
 float Q, R;
-float x1[2] = {0.0, 0.0}; // orientation
-float x2[2] = {0.0, 0.0}; // woutKalman (angular_vel)
+float Position_Kalman[2] = {0.0, 0.0}; // orientation
+float Velocity_Kalman[2] = {0.0, 0.0}; // woutKalman (angular_vel)
 float p11[2] = {1.0, 1.0}; // adjustable
 float p12[2] = {0.0, 0.0};
 float p21[2] = {0.0, 0.0};
 float p22[2] = {0.9, 0.9}; // adjustable
 
+unsigned char En_T1 = 0;
+float Trajectory_Theta = 0;
+float Trajectory_Time = 0;
+float Trajectory_Magnitude = 0;
+float pose_i = 0;
+float pose_f = 0;
+float delta_x = 0.0;
+float delta_y = 0.0;
+//float r = 0 ;
+
+float C0 = 0;
+float C2 = 0;
+float C2x = 0;
+float C2y = 0;
+float C3 = 0;
+float C3x = 0;
+float C3y = 0;
+float x_fi = 0;
+float y_fi = 0;
+
+float tra_vx = 0;
+float tra_vy = 0;
+float ppx = 0;
+float vvx = 0;
+float ppy = 0;
+float vvy = 0;
+float ppt = 0;
+float Sx = 0;
+float Sy = 0;
+float Vx = 0;
+float Vy = 0;
+
 int package_uart(unsigned char data) {
     int result = 0;
     static unsigned char state = 0;
     static int checksum = 0;
-    if ((state == 0)) {
-        if (data == 0xBD) {
-            state++;
-        } else {
-            state = 0;
-            result = 0xFA;
-        }
-    } else if (state == 1) {
-        if (data == ID) {
-            checksum += data;
-            state++;
-        } else {
-            state = 0;
-            result = 0xFA;
-        }
-    } else if (state == 2) {
-        checksum += data;
-        pose_x = data << 8;
-        state++;
-    } else if (state == 3) {
-        checksum += data;
-        pose_x |= data;
-        pose_x = pose_x * 154;
-        state++;
-    } else if (state == 4) {
-        checksum += data;
-        pose_y = data << 8;
-        state++;
-    } else if (state == 5) {
-        checksum += data;
-        pose_y |= data;
-        pose_y = pose_y * 154;
-        state++;
-    } else if (state == 6) {
-        checksum = ~checksum;
-        checksum = checksum & 0xFF;
-        if (checksum == data) {
-            result = 0xAC;
-        } else {
-            result = 0xFA;
-        }
+    //    static unsigned int theta_UART = 0;
+    //    static unsigned int t_UART = 0;
+    static unsigned int pose_x_UART = 0;
+    static unsigned int pose_y_UART = 0;
+    switch (state) {
+        case 0:
+            if (data == 0xBD) {
+                state = 1;
+            } else {
+                result = 0xFA;
+            }
+            break;
 
-        checksum = 0;
-        state = 0;
+        case 1:
+            if (data == 0x40) {
+                state = 41;
+            } else if (data == 0x30) {
+                state = 31;
+            } else if (data == 0x20) {
+                state = 21;
+            } else if (data == 0x10) {
+                state = 11;
+            } else {
+                result = 0xFA;
+            }
+            break;
+
+        case 41:
+            checksum += 0x40;
+            checksum += data;
+            pose_x_UART = data << 8;
+            state = 42;
+            break;
+
+        case 42:
+            checksum += data;
+            pose_x_UART |= data;
+            pose_x_UART *= 154.0; // 154
+            state = 43;
+            break;
+        case 43:
+            checksum += data;
+            pose_y_UART = data << 8;
+            state = 44;
+            break;
+        case 44:
+            checksum += data;
+            pose_y_UART |= data;
+            pose_y_UART *= 154.0;
+            state = 45;
+            break;
+        case 45:
+            checksum = ~checksum;
+            checksum = checksum & 0xFF;
+            if (checksum == data) {
+                Position_X += delta_x;
+                Position_Y += delta_x;
+                //                Position_X += delta_x; float(POS1CNT)
+                //                Position_Y += delta_y; float(POS2CNT)
+                delta_x = (float) pose_x_UART - Position_X;
+                delta_y = (float) pose_y_UART - Position_Y;
+                Trajectory_Theta = atan2(delta_y, delta_x);
+                Trajectory_Magnitude = sqrt((delta_y * delta_y) + (delta_x * delta_x));
+                //                Trajectory_Magnitude = Trajectory_Magnitude / 154.0;
+                Trajectory_Time = Trajectory_Magnitude / 8100.0 ;
+                //                Trajectory_Time = Trajectory_Time / 1000.0;
+                //                pose_f = pose_f_UART;
+                C2 = 3.0 / (Trajectory_Time * Trajectory_Time);
+                C3 = -2.0 / (Trajectory_Time * Trajectory_Time * Trajectory_Time);
+//                C2x = C2 ;
+//                C3x = ;
+//                C2y = ;
+//                C3y = ;
+                        
+                //                x_fi = (Trajectory_Magnitude * cos(Trajectory_Theta)) - Position_X;
+                //                y_fi = (Trajectory_Magnitude * sin(Trajectory_Theta)) - Position_Y;
+                //                C2 = (3 / (Trajectory_Time * Trajectory_Time));
+                //                C3 = (-2 / (Trajectory_Time * Trajectory_Time * Trajectory_Time));
+                //
+                //                C2x = C2 * x_fi;
+                //                C3x = C3 * x_fi;
+                //                C2y = C2 * y_fi;
+                //                C3y = C3 * y_fi;
+
+//                                printf("%.2f\t", Trajectory_Time);
+//                                printf("%.2f\n", Trajectory_Magnitude);
+                //                printf("%.2f\t", Position_X);
+                //                printf("%.2f\t", Position_Y);
+                //                printf("%.2f\t", delta_x);
+                //                printf("%.2f\t", delta_y);
+                //                Position_X += delta_x;
+                //                Position_Y += delta_y;
+                //                printf("%.2f\t", Position_X);
+                //                printf("%.2f\n", Position_Y);
+                result = 0xAC;
+
+                T1CONbits.TON = 1;
+                //                En_T1 = 40;
+
+            } else {
+                result = 0xFA;
+            }
+            //            theta_UART = 0;
+            //            t_UART = 0;
+            pose_x_UART = 0;
+            pose_y_UART = 0;
+            checksum = 0;
+            state = 0;
+            Trajectory_Time_Now = 0;
+            break;
+            // operator doesn't match any case constant +, -, *, /
+        default:
+            result = 0xFA;
     }
+
     return result;
 }
 
@@ -116,78 +230,183 @@ void __attribute__((interrupt, no_auto_psv)) _U1ErrInterrupt(void) {
 }
 
 void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
-    //    static long long int output_x = 0;
-    //    volatile long long int s = 0;
-    //    volatile long long int p = 0;
-    encoder[0] = (float) POS1CNT;
-    error[0] = (float) pose_x - encoder[0];
-    output[0] = 1.0 * error[0];
-    encoder[1] = (float) POS2CNT;
-    error[1] = (float) pose_y - encoder[1];
-    output[1] = 1.0 * error[1];
+
+    Sx = (float)Position_X + ((C2 * Trajectory_Time_Now * Trajectory_Time_Now)+(C3 * Trajectory_Time_Now * Trajectory_Time_Now * Trajectory_Time_Now)) * delta_x;
+    Sy = (float)Position_Y + ((C2 * Trajectory_Time_Now * Trajectory_Time_Now)+(C3 * Trajectory_Time_Now * Trajectory_Time_Now * Trajectory_Time_Now)) * delta_y;
+    Vx = ((2.0 * C2 * Trajectory_Time_Now)+(3.0 * C3 * Trajectory_Time_Now * Trajectory_Time_Now))* delta_x; // * cos(Trajectory_Theta) 
+    Vy = ((2.0 * C2 * Trajectory_Time_Now)+(3.0 * C3 * Trajectory_Time_Now * Trajectory_Time_Now))* delta_y; //  * sin(Trajectory_Theta) 
+    //    ppx = Position_X + (C2x * Trajectory_Time_Now * Trajectory_Time_Now) + (C3x * Trajectory_Time_Now * Trajectory_Time_Now * Trajectory_Time_Now);
+    //    vvx = (2 * C2x * Trajectory_Time_Now) + (3 * C3x * Trajectory_Time_Now * Trajectory_Time_Now);
+    //    ppy = Position_Y + (C2y * Trajectory_Time_Now * Trajectory_Time_Now) + (C3y * Trajectory_Time_Now * Trajectory_Time_Now * Trajectory_Time_Now);
+    //    vvy = (2 * C2y * Trajectory_Time_Now) + (3 * C3y * Trajectory_Time_Now * Trajectory_Time_Now);
+    //    Position_X = ((C2 * Trajectory_Time * Trajectory_Time)+(C3 * Trajectory_Time * Trajectory_Time)) * delta_x * cos(Trajectory_Theta);
+    //    Position_Y = ((C2 * Trajectory_Time * Trajectory_Time)+(C3 * Trajectory_Time * Trajectory_Time)) * delta_y * sin(Trajectory_Theta);
+    //  
+
+    Position_X_Goal = Sx;
+    Position_Y_Goal = Sy;
+    Velocity_X = Vx;
+    Velocity_Y = Vy;
+    //    printf("%.2f\t", Position_X);
+    //    printf("%.2f\t", Sx);
+    //    printf("%.2f\t", Position_Y);
+    //    printf("%.2f\t", Sy);
+    //    printf("%.2f\t", Vx);
+    //    printf("%.2f\n", Vy);
+
+
+
+    Encoder[0] = (float) POS1CNT;
+    Encoder[1] = (float) POS2CNT;
     const float CONT_pow2 = CONT * CONT;
     const float CONT_pow3 = CONT * CONT * CONT;
     const float CONT_pow4 = CONT * CONT * CONT * CONT;
-   
+
     unsigned char i;
+    Velocity_Input_Kalman[0] = (Encoder[0] - Pre_position_fixwindow[0]) / CONT;
+    Velocity_Input_Kalman[1] = (Encoder[1] - Pre_position_fixwindow[1]) / CONT;
+    //    printf("%.2f\t",Pre_position_fixwindow[0]);
+
     for (i = 0; i < 2; i++) {
-        v[i] = (encoder[i] - pre_pose[i]) / CONT;
 
         float Q = sigma_a[i] * sigma_a[i];
         float R = sigma_w[i] * sigma_w[i];
-        float x1_new = x1[i] + x2[i] * CONT;
-        float x2_new = 0 + x2[i];
-        float ye = v[i] - x2_new;
+        float Position_Kalman_new = Position_Kalman[i] + Velocity_Kalman[i] * CONT;
+        float Velocity_Kalman_new = 0 + Velocity_Kalman[i];
+        float ye = Velocity_Input_Kalman[i] - Velocity_Kalman_new;
         p11[i] = p11[i] + (CONT * p21[i]) + (Q * CONT_pow4) / 4 + (CONT_pow2 * (p12[i] + CONT * p22[i])) / CONT;
         p12[i] = p12[i] + (CONT * p22[i]) + (Q * CONT_pow3) / 2;
         p21[i] = (2 * CONT * p21[i] + Q * CONT_pow2 + 2 * p22[i] * CONT_pow2) / (2 * CONT);
         p22[i] = Q * CONT_pow2 + p22[i];
-        x1_new = x1_new + (p12[i] * ye) / (R + p22[i]);
-        x2_new = x2_new + (p22[i] * ye) / (R + p22[i]);
+        Position_Kalman_new = Position_Kalman_new + (p12[i] * ye) / (R + p22[i]);
+        Velocity_Kalman_new = Velocity_Kalman_new + (p22[i] * ye) / (R + p22[i]);
         p11[i] = p11[i] - (p12[i] * p21[i]) / (R + p22[i]);
         p12[i] = p12[i] - (p12[i] * p22[i]) / (R + p22[i]);
         p21[i] = -p21[i] * (p22[i] / (R + p22[i]) - 1);
         p22[i] = -p22[i] * (p22[i] / (R + p22[i]) - 1);
-        //update variable of kaman filter
+        //update variable of kalman filter
+        Pre_position_fixwindow[i] = Encoder[i];
         //    pre_position = position;
-        x1[i] = x1_new; // position
-        x2[i] = x2_new; // velocity
-
+        Position_Kalman[i] = Position_Kalman_new; // position
+        Velocity_Kalman[i] = Velocity_Kalman_new; // velocity
     }
-    printf("%.2f\t%.2f\t%.2f\t%.2f\n", encoder[1], x1[1], v[1], x2[1]);
 
-    if (error[0] < 700.0 && error[0] > -700.0) {
+    //    printf("%.2f\t",Encoder[0]);
+
+    //SigmaError_velcont[2]
+    //PreError_velcont[2]
+    const float Kp_px = 0.0;
+    const float Ki_px = 0.0;
+    const float Kd_px = 0.0;
+
+    const float Kp_vx = 4.0; // 4.0
+    const float Ki_vx = 0.1; // 0.1
+    const float Kd_vx = 2.5; // 2.5
+
+    const float Kp_py = 0.0;
+    const float Ki_py = 0.0;
+    const float Kd_py = 0.0;
+
+    const float Kp_vy = 4.0; // 4.0
+    const float Ki_vy = 0.15; //0.15
+    const float Kd_vy = 2.5; // 2.5
+
+    // X axis
+    //Position Control X
+    Encoder[0] = (float) POS1CNT;
+    Error_posecont[0] = (float) Position_X_Goal - Encoder[0];
+    Output_posecont[0] = Kp_px * Error_posecont[0];
+    //Velocity Control X
+    Input_velcont[0] = Velocity_X + Output_posecont[0]; // Feed Forward + Output Position Control
+    Error_velcont[0] = Input_velcont[0] - Velocity_Kalman[0]; // 
+    SumError_velcont[0] += Error_velcont[0];
+    Output_velcont[0] = (Kp_vx * Error_velcont[0]) + (Ki_vx * SumError_velcont[0]) + (Kd_vx * (Error_velcont[0] - PreError_velcont[0]));
+    // End
+
+
+
+    // Y axis
+    // Position Control Y
+    Encoder[1] = (float) POS2CNT;
+    Error_posecont[1] = (float) Position_Y_Goal - Encoder[1];
+    Output_posecont[1] = Kp_py * Error_posecont[1];
+    // Velocity Control Y
+    Input_velcont[1] = Velocity_Y + Output_posecont[1]; // Feed Forward + Output Position Control
+    Error_velcont[1] = Input_velcont[1] - Velocity_Kalman[1]; // 
+    SumError_velcont[1] += Error_velcont[1];
+    Output_velcont[1] = (Kp_vy * Error_velcont[1]) + (Ki_vy * SumError_velcont[1]) + (Kd_vy * (Error_velcont[1] - PreError_velcont[1]));
+    //End
+
+    if (Output_velcont[0] > 10000.0) {
+        Driver_motor_X(10000);
+    } else if (Output_velcont[0] < -10000.0) {
+        Driver_motor_X(-10000);
+    } else {
+        Driver_motor_X((int) Output_velcont[0]);
+    }
+
+    if (Output_velcont[1] > 10000.0) {
+        Driver_motor_Y(10000);
+    } else if (Output_velcont[1] < -10000.0) {
+        Driver_motor_Y(-10000);
+    } else {
+        Driver_motor_Y((int) Output_velcont[1]);
+    }
+
+    PreError_velcont[0] = Error_velcont[0];
+    PreError_velcont[1] = Error_velcont[1];
+
+
+    if (Trajectory_Time_Now < Trajectory_Time) {
+        Trajectory_Time_Now += CONT;
+    } else {
+        //        pose_i = Trajectory_Magnitude;
+        Trajectory_Time_Now = Trajectory_Time;
+        SumError_velcont[0] = 0.0;
+        SumError_velcont[1] = 0.0;
         Driver_motor_X(0);
-    } else {
-        if (output[0] > 10000.0) {
-            Driver_motor_X(10000.0);
-        } else if (output[0] < -10000.0) {
-            Driver_motor_X(-10000.0);
-        } else {
-            Driver_motor_X(output[0]);
-        }
-    }
-
-
-    //    printf("%.2f\t", encoder_x);
-    ////    printf("%.2f\t", error_x);
-    //    printf("%.2f\t\n", pose_x);
-
-
-    if (output[1] < 700.0 && output[1] > -700.0) {
         Driver_motor_Y(0);
-    } else {
-        if (output[1] > 10000.0) {
-            Driver_motor_Y(10000.0);
-        } else if (output[1] < -10000.0) {
-            Driver_motor_Y(-10000.0);
-        } else {
-            Driver_motor_Y(output[1]);
-        }
-    }
 
-    pre_pose[0] = encoder[0];
-    pre_pose[1] = encoder[1];
+        //        Position_X = Encoder[0];
+        //        Position_Y = Encoder[1];
+        //        Position_X += (C2x * Trajectory_Time * Trajectory_Time) + (C3x * Trajectory_Time * Trajectory_Time * Trajectory_Time) * 154.0;
+        //        Position_Y += (C2y * Trajectory_Time * Trajectory_Time) + (C3y * Trajectory_Time * Trajectory_Time * Trajectory_Time) * 154.0;
+        //        T1CONbits.TON = 0;
+        //        if (Output_velcont[1] <= 800.0 && Output_velcont[0] <= 800.0 && Output_velcont[1] >= -800.0 && Output_velcont[0] >= -800.0)
+        //        if (Output_velcont[1] == 0.0 && Output_velcont[0] == 0.0) {
+        //            
+
+
+        //        }
+        //        
+
+        T1CONbits.TON = 0;
+    }
+//    printf("%.2f\t", Position_Y_Goal);
+//    printf("%.2f\t", Encoder[1]);
+//    printf("%.2f\t", Velocity_Y);
+//    printf("%.2f\t", Velocity_Kalman[1]);
+    //        printf("%.2f\t", Output_velcont[0]);
+    //        printf("%.2f\t", Error_velcont[0]);
+    //        printf("%.2f\t", Output_velcont[1]);
+    //    printf("%.2f\t",Velocity_X);
+    //    printf("%.2f\t",Velocity_Kalman[0]);
+    //    printf("%d\t",(int) Output_velcont[0]);
+
+    //        printf("%.2f\t",Velocity_Y);
+    //    printf("%.2f\t",Velocity_Kalman[1]);
+    //    printf("%d\t",(int) Output_velcont[1]);
+    //
+    //    printf("%.2f\t", Error_velcont[0]);
+    //    printf("%.2f\t", SumError_velcont[0]);
+    //    
+    //    printf("%.2f\t", Velocity_Kalman[0]);
+    //    printf("%.2f\t", Output_velcont[0]);
+    //    printf("%.2f\t", Output_posecont[0]);
+    printf("\n");
+
+
+
     _T1IF = 0;
 }
 
@@ -253,19 +472,19 @@ void init_QEI() {
 
 void init_Timer() {
     T1CONbits.TCKPS = 0b01; //set timer prescaler to 1:8
-    PR1 = 50000; //set 100Hz Timer interrupt 
+    PR1 = 10000; //set 500Hz Timer interrupt 
     _T1IE = 1; // enable Timer1 interrupt
-    _T1IP = 5; // set priority to 5
+    _T1IP = 3; // set priority to 5
 }
 
-void dealy_UART() {
+void delay_UART() {
     unsigned int i;
     for (i = 0; i < 500; i++) { //347
         Nop();
     }
 }
 
-void dealy(unsigned long int time) {
+void delay(unsigned long int time) {
     unsigned long int i;
     for (i = 0; i < time; i++) { //347
         Nop();
@@ -273,8 +492,8 @@ void dealy(unsigned long int time) {
 }
 
 void init_Motor() {
-    T2CONbits.TCKPS = 0b01; //set timer prescaler to 1:64
-    PR2 = 10000; //set period to 15,625 tick per cycle 
+    T2CONbits.TCKPS = 0b01; //set timer prescaler to 1:8
+    PR2 = 10000; //set period to 10,000 tick per cycle 500Hz
     OC1CONbits.OCM = 0b000; //Disable Output Compare Module
     OC1CONbits.OCTSEL = 0; //OC1 use timer2 as counter source
     OC1CONbits.OCM = 0b110; //set to pwm without fault pin mode
@@ -283,8 +502,8 @@ void init_Motor() {
     _RP15R = 0b10010; //remap RP11 connect to OC1
     __builtin_write_OSCCONL(OSCCON | 0x40); //PPS RECONFIG LOCK
     ///////////////////////////////////////////////////////////
-    T3CONbits.TCKPS = 0b01; //set timer prescaler to 1:64
-    PR3 = 10000; //set period to 15,625 tick per cycle 
+    T3CONbits.TCKPS = 0b01; //set timer prescaler to 1:8
+    PR3 = 10000; //set period to 10,000 tick per cycle 500Hz
     OC2CONbits.OCM = 0b000; //Disable Output Compare Module
     OC2CONbits.OCTSEL = 1;
     OC2CONbits.OCM = 0b110; //set to pwm without fault pin mode
@@ -301,8 +520,7 @@ void init_PinMode() {
     TRISB = 0x0FD3;
 }
 
-void Driver_motor_Y(long int input) {
-    OC1RS = abs(input);
+void Driver_motor_Y(int input) {
     if (input < 0) {
         LATAbits.LATA0 = 1;
         LATAbits.LATA1 = 0;
@@ -314,9 +532,10 @@ void Driver_motor_Y(long int input) {
         LATAbits.LATA0 = 1;
         LATAbits.LATA1 = 1;
     }
+    OC1RS = abs(input);
 }
 
-void Driver_motor_X(long int input) {
+void Driver_motor_X(int input) {
     OC2RS = abs(input);
     if (input < 0) {
         LATBbits.LATB2 = 1;
@@ -328,37 +547,36 @@ void Driver_motor_X(long int input) {
         LATBbits.LATB2 = 1;
         LATBbits.LATB3 = 1;
     }
+    OC1RS = abs(input);
 }
 
 void Set_Home() {
     while (_RB4 == 1) {
-        Driver_motor_Y(-3000.0);
+        Driver_motor_Y(-3000);
     }
-    Driver_motor_Y(0.0);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
+    Driver_motor_Y(0);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+
     while (_RB7 == 1) {
-        Driver_motor_X(-3000.0);
+        Driver_motor_X(-3000);
     }
-    Driver_motor_X(0.0);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
+    Driver_motor_X(0);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+
 
 
 }
@@ -373,50 +591,71 @@ int main(void) {
     TRISB = 0x0FD3;
     //    init_INT();
     init_Timer(); // Set timer1_interrupt 100Hz
-
     T2CONbits.TON = 1; //enable PWM 1
     T3CONbits.TON = 1; //enable PWM 2
-
     init_Motor();
     __builtin_enable_interrupts();
     init_QEI(); // Set QEI register mode 2x 
     Set_Home();
     __builtin_disable_interrupts();
     init_UART(); // Set UART register
-    dealy_UART(); //wait at least 8.68 usec (1/115200) before sending first char 
+    delay_UART(); //wait at least 8.68 usec (1/115200) before sending first char 
 
     /*enable global interrupt*/
     __builtin_enable_interrupts();
 
     unsigned long int cot;
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
-    dealy(100000);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+    delay(123456);
+
     POS1CNT = 0;
     POS2CNT = 0;
-    T1CONbits.TON = 1; //enable Timer interrupt
-
+    //enable Timer interrupt
+//    T1CONbits.TON = 1;
     while (1) {
         if (uartbuf != 0) {
             send_package(uartbuf);
             uartbuf = 0;
         }
+        //        if (Trajectory_Time > 0.0) {
+        //              
+        //            
+        //        }
+        //        else
+        //            pose_i = pose_f;
+        //            T1CONbits.TON = 0;
+        //        
+        //        if (En_T1 == 2) {
+        //            T1CONbits.TON = 0;
+        //            En_T1 = 0;
+        //        }
+        //        if (En_T1 == 40) {
+        //            T1CONbits.TON = 1;
+        //            En_T1 = 0;s
+        //        }
+
 
         if (cot >= 10000) {
+            //            printf("%.2f\t",time);
+            //            printf("%.2f\n",t);
             //            int i ;
             //            for (i = 0; i < 2; i++) {printf("%d\n",i);}
             //            printf("%u\t", POS1CNT);
             //            printf("%u\t", POS2CNT);
             //            printf("%.2f\t", error_x);
             //                        printf("%.2f\t",error_y);
-            //            printf("%ld\t", pose_x);
+            //            printf("%ld\t", Position_X_Goal);
             //            printf("\n");
             cot = 0;
         }
