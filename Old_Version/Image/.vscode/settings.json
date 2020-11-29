@@ -1,0 +1,6 @@
+{
+    "python.linting.enabled": false,
+    "python.linting.pylintEnabled": false,
+    "python.linting.pycodestyleEnabled": true,
+    "python.pythonPath": "C:\\Users\\aminb\\.conda\\envs\\opencv_conda_env\\python.exe"
+}
