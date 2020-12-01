@@ -1,37 +1,18 @@
-import cv2
-import numpy as np
+import serial
+from time import sleep
 
-# cap = cv2.VideoCapture(0)
-frame = cv2.imread("Filed_img.jpg")
-# cv2.imshow("image", frame)
 
-while(1):
-    
-    # _, frame = cap.read()
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    
-    lower_red = np.array([30,150,50])
-    upper_red = np.array([255,255,180])
-    
-    mask = cv2.inRange(hsv, lower_red, upper_red)
-    res = cv2.bitwise_and(frame,frame, mask= mask)
-    kernel = np.ones((15,15),np.float32)/225
-    smoothed = cv2.filter2D(res,-1,kernel)
-    cv2.imshow('Original',frame)
-    # cv2.imshow('Averaging',smoothed)
+def bytesy(integer):
+    return divmod(integer, 0x100)
 
-    # blur = cv2.GaussianBlur(res,(15,15),0)
-    # cv2.imshow('Gaussian Blurring',blur)
+def Flush_PositionZ_Gripper(Position_Z,Orentation,Position,Time,method='bytey'):
+    Data_Frame = [0xBD,0x61,*bytesy(Position_Z),Orentation,Position,*bytesy(Time)]
+    CheckSum = ( ~(sum(Data_Frame[1:])) % 256 ) % 256
+    Data_Frame.extend([CheckSum])
+    if method.lower() == 'list':
+        return Data_Frame
+    if method.lower() == 'bytey':
+        return bytearray(Data_Frame)
 
-    # median = cv2.medianBlur(res,15)
-    # cv2.imshow('Median Blur',median)
 
-    bilateral = cv2.bilateralFilter(res,9,0,0)
-    cv2.imshow('bilateral Blur',bilateral)
-
-    k = cv2.waitKey(5) & 0xFF
-    if k == 27:
-        break
-
-cv2.destroyAllWindows()
-cap.release()
+print(" ".join(str(x) for x in Flush_PositionZ_Gripper(300,0,50,7996)))

@@ -70,13 +70,14 @@ char State_print_Position = 0;
 bool State_Control = 0;
 bool State_Print = 0;
 bool State_UART = 0;
-
+bool State_print_Time = 0;
 int package_uart(unsigned char data) {
     int result = 0;
     static unsigned char state = 0;
     static int checksum = 0;
     static unsigned int pose_x_UART = 0;
     static unsigned int pose_y_UART = 0;
+    static unsigned int time_UART = 0;
     switch (state) {
         case 0:
             if (data == 0xBD) {
@@ -116,7 +117,7 @@ int package_uart(unsigned char data) {
         case 12:
             State_Sethome = 1;
             state = 0;
-            result = 0xAC;
+//            result = 0xAC;
             break;
 
         case 21:
@@ -126,7 +127,7 @@ int package_uart(unsigned char data) {
         case 22:
             State_print_Position = 1;
             state = 0;
-            result = 0xAC;
+//            result = 0xAC;
             break;
 
         case 23:
@@ -136,7 +137,7 @@ int package_uart(unsigned char data) {
         case 24:
             State_print_Position = 2;
             state = 0;
-            result = 0xAC;
+//            result = 0xAC;
             break;
 
         case 25:
@@ -146,7 +147,7 @@ int package_uart(unsigned char data) {
         case 26:
             State_print_Position = 3;
             state = 0;
-            result = 0xAC;
+//            result = 0xAC;
             break;
 
         case 50:
@@ -184,6 +185,19 @@ int package_uart(unsigned char data) {
             pose_y_UART *= 154.0;
             state = 45;
             break;
+//        
+//        case 45:
+//            checksum += data;
+//            time_UART = data << 8;
+//            state = 46;
+//            break;
+//            
+//        case 46:
+//            checksum += data;
+//            time_UART |= data;
+//            state = 47;
+//            break;
+            
         case 45:
             checksum = ~checksum;
             checksum = checksum & 0xFF;
@@ -195,13 +209,14 @@ int package_uart(unsigned char data) {
                 Trajectory_Theta = atan2(delta_y, delta_x);
                 Trajectory_Magnitude = sqrt((delta_y * delta_y) + (delta_x * delta_x));
 
-                Trajectory_Time = Trajectory_Magnitude / 7000.0;
+                Trajectory_Time = Trajectory_Magnitude/7000.0 ; 
 
                 C2 = 3.0 / (Trajectory_Time * Trajectory_Time);
                 C3 = -2.0 / (Trajectory_Time * Trajectory_Time * Trajectory_Time);
 
                 result = 0xAC;
-                //                printf("%u\t%u\n",pose_x_UART,pose_y_UART);
+//                State_print_Time = 1;
+//                                printf("%u\t%u\n",pose_x_UART,pose_y_UART);
                 //                En_T1 = 40;
 
             } else {
@@ -214,7 +229,7 @@ int package_uart(unsigned char data) {
             checksum = 0;
             state = 0;
             Trajectory_Time_Now = 0;
-
+            
             break;
             // operator doesn't match any case constant +, -, *, /
         default:
@@ -364,6 +379,7 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
         Position_X = Encoder[0];
         Position_Y = Encoder[1];
         T1CONbits.TON = 0;
+        Trajectory_Time = 0;
         send_package(0xCA);
     }
     State_Print = 1;
@@ -515,7 +531,7 @@ void Driver_motor_X(int input) {
         LATBbits.LATB2 = 1;
         LATBbits.LATB3 = 1;
     }
-    OC1RS = abs((int) input);
+    OC2RS = abs((int) input);
 }
 
 void Set_Home() {
@@ -581,24 +597,32 @@ int main(void) {
         }
         if (State_print_Position == 1) {
             State_print_Position = 0;
-            delay_int(500);
-            printf("%d\t%d\n", Position_X, Position_Y);
+            send_package(0xAC);
+            delay_int(2000);
+            printf("%.0f\t%.0f\n", Position_X, Position_Y);
         }
         if (State_print_Position == 2) {
             State_print_Position = 0;
-            delay_int(500);
-            printf("%d\n", Position_X);
+            send_package(0xAC);
+            delay_int(2000);
+             printf("%.4f\n", Trajectory_Time);
         }
         if (State_print_Position == 3) {
             State_print_Position = 0;
-            delay_int(500);
-            printf("%d\n", Position_Y);
+            send_package(0xAC);
+            delay_int(2000);
+            printf("%.2f\n", Position_Y);
         }
         if (State_Control == 1) {
             State_Control = 0;
             T1CONbits.TON = 1;
         }
-
+        if (State_print_Time == 1) {
+            State_print_Time = 0;
+            send_package(0xAC);
+            delay_int(2000);
+            printf("%.4f\n", Trajectory_Time);
+        }
 
         if (cot >= 10000) {
             cot = 0;
@@ -606,10 +630,10 @@ int main(void) {
         cot++;
         if (State_Print == 1) {
             // print X 
-            //            printf("%.2f\t", Position_X_Goal);
-            //            printf("%.2f\t", Encoder[0]);
-            //            printf("%.2f\t", Velocity_X);
-            //            printf("%.2f\t", Velocity_Kalman[0]);
+//                        printf("%.2f\t", Position_X_Goal);
+//                        printf("%.2f\t", Encoder[0]);
+//                        printf("%.2f\t", Velocity_X);
+//                        printf("%.2f\t", Velocity_Kalman[0]);
 
             // print Y 
             //            printf("%.2f\t", Position_Y_Goal);
@@ -617,7 +641,7 @@ int main(void) {
             //            printf("%.2f\t", Velocity_Y);
             //            printf("%.2f\t", Velocity_Kalman[1]);
             //
-            //            printf("\n");
+//                        printf("\n");
             State_Print = 0;
         }
     }

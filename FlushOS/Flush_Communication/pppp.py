@@ -44,7 +44,7 @@ side4_id = []
 for i in range(16, 25):
     side4_id.append(i)
 #read multiplt image for Median
-images = read_multiple_image(r'C:\Users\aminb\Desktop\FIBO\Embedded\Code Communication\Image_rail')
+images = read_multiple_image(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Communication\Rail_Photo')
 
 # test_aruco = images[0]
 # test_aruco = resize_percent(test_aruco, 60)
@@ -177,7 +177,7 @@ vertical1 = np.concatenate((Q1_result, Q4_result), axis = 0)
 vertical2 = np.concatenate((Q2_result, Q3_result), axis = 0)
 horizontal = np.concatenate((vertical1, vertical2), axis = 1)
 cv2.imshow('full_sequence', horizontal)
-cv2.imwrite('ready_field.jpg', horizontal)
+cv2.imwrite(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Communication\ready_field.jpg', horizontal)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 

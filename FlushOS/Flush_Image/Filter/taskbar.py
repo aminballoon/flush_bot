@@ -2,11 +2,11 @@ import cv2
 import numpy as np
 import json
 
-with open(r'C:\Users\aminb\Desktop\FIBO\Image\Moduel_image\parameter.json') as json_file:
+with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Image\Moduel_image\parameter.json') as json_file:
     data = json.load(json_file)
     Parametersy = (data['Parameter'][0])
 
-image = cv2.imread(r'C:\Users\aminb\Desktop\FIBO\Image\Moduel_image\ready_field(1).jpg')
+image = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\test.png')
 # image = cv2.medianBlur(image,9)
 # kernel = np.array([[-1,-1,-1],
 #                     [-1, 9,-1],
@@ -90,14 +90,14 @@ while(1):
     cv2.imshow("image_morp",image_morp) 
     
     contours, hierarchy = cv2.findContours(image_morp , cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    print("Number of Contours found = " + str(len(contours))) 
+    # print("Number of Contours found = " + str(len(contours))) 
     for i in range(0, len(contours)):
         area = int(cv2.contourArea(contours[i]))
         if area >= minArea:
             if area <= maxArea*100:
                 contour_use.append(i)
     black_image = np.zeros((resolution_X, resolution_Y, 1), np.uint8)
-
+    # print(Kernel_blur,Kernel_morp)
     for i in contour_use:
         cv2.drawContours(black_image,contours,i,(255,255,255))
     black_image = cv2.dilate(black_image,Kernel_morp_use,iterations = iterations)
@@ -131,12 +131,11 @@ while(1):
     if k == 27:
         break
     Kernel_blur = ((cv2.getTrackbarPos("Kernel_blur","image_blur")+1)*2)-1
-    print(Kernel_blur)
     Canny_Thres_1 = cv2.getTrackbarPos("Canny_Thres_1","image_edge")
     Canny_Thres_2 = cv2.getTrackbarPos("Canny_Thres_2","image_edge")
 
     Kernel_morp = ((cv2.getTrackbarPos("Kernel_morp","image_morp")+1)*2)-1
-    print(Kernel_morp)
+    
     Mode_morp = cv2.getTrackbarPos("Mode_morp","image_morp")
     iterations = cv2.getTrackbarPos("iterations","image_morp")
     
@@ -144,7 +143,7 @@ while(1):
     maxArea = cv2.getTrackbarPos("maxArea","image_contour")
 
     save = cv2.getTrackbarPos("save","image_save")
-
+    print(Kernel_blur,Kernel_morp)
 
 
 if save == 1:
@@ -156,14 +155,15 @@ if save == 1:
         'Canny_Thres_1': Canny_Thres_1,
         'Canny_Thres_2': Canny_Thres_2,
         # 'Kernel_morp': (int(((Kernel_morp)/2)-1)),
-        'Kernel_morp': int((Kernel_morp-1)/2),
+        'Kernel_morp': Kernel_morp,
         'Mode_morp': Mode_morp,
         'iterations': iterations,
         'minArea' : minArea,
         # 'maxArea': int(maxArea/100)
         'maxArea': int(maxArea)
     })
-    with open(r'C:\Users\aminb\Desktop\FIBO\Image\Moduel_image\parameter.json', 'w') as outfile:
+    
+    with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Image\Moduel_image\parameter.json', 'w') as outfile:
         json.dump(data, outfile)
 
     # data['blur'].append({

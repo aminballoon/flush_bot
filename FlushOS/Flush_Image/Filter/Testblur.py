@@ -19,7 +19,7 @@ def find_middle(x1, y1, x2, y2):
 	xx = int(min_x + ((max_x-min_x)/2))
 	yy = int(min_y + ((max_y-min_y)/2))
 	return (xx,yy)
-image = cv2.imread(r'C:\Users\aminb\Desktop\FIBO\Image\Moduel_image\ready_field(1).jpg')
+image = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Communication\ready_field.jpg')
 black_image = np.zeros((600, 600, 1), np.uint8)
 # kuy = [[518, 187], [520, 525], [186, 525], [186, 459], [454, 448], [453, 189]]
 kuy = [[132, 102], [293, 262], [263, 293], [135, 165], [126, 405], [91, 411], [89, 108]]

@@ -156,52 +156,17 @@ def connected_symbol_path(list_box,const = 30,draw = True):
                         cv2.circle(image,i,2,(0,0,255),-1)
                 # cv2.line(image,(center_x,center_y),(center_x , center_y - cont_y),(0,0,255),3)
 
-def point_path(list_path,draw = True):
+def point_path_conner(list_path,draw = True):
     global list_all_point_path ,image 
     for k in list_path:
         epsilon = 0.02 * cv2.arcLength(contours[k], True)
         approx = cv2.approxPolyDP(contours[k], epsilon, True)
         list_approx = []
-        o = 0
         for j in approx.tolist():
             list_approx.append(j[0])
             # print(j[0])
-            cv2.circle(image, (j[0][0],j[0][1])  , 3, (0, 255, o), -1)
-            o += 50
+            cv2.circle(image, (j[0][0],j[0][1])  , 3, (0, 255, 0), -1)
         print(list_approx)
-        # if len(list_approx) >= 7:
-        #     a = 0
-        #     b = -1
-        #     list_line = []
-        #     for _ in range(int(len(list_approx)/2)):
-        #         point_xy_midle = find_middle(*tuple(list_approx[a]), *tuple(list_approx[b]))
-        #         # cv2.circle(image, point_xy_midle  , 3, (0, 255, 0), -1)
-        #         list_line.append(point_xy_midle)
-        #         a += 1
-        #         b -= 1
-        #     for i in range(1,len(list_line)):
-        #         for j in sampling(*list_line[i-1],*list_line[i],prescaler=Set_Prescaler):
-        #             list_all_point_path.append(j+(find_gradient(image_gray,*j),))
-        #             if draw == True:
-        #                 cv2.circle(image,j,2,(0,0,255),-1)
-
-        # else:
-        #     list_approx = top_to_bot(list_approx)
-        #     a = 0
-        #     b = -1
-        #     list_line = []
-        #     for _ in range(int(len(list_approx)/2)):
-        #         point_xy_midle = find_middle(*tuple(list_approx[a]), *tuple(list_approx[b]))
-        #         # cv2.circle(image, point_xy_midle  , 3, (0, 255, 0), -1)
-        #         list_line.append(point_xy_midle)
-        #         a += 1
-        #         b -= 1
-            
-        #     for i in range(1,len(list_line)):
-        #         for j in sampling(*list_line[i-1],*list_line[i],prescaler=Set_Prescaler):
-        #             list_all_point_path.append(j+(find_gradient(image_gray,*j),))
-        #             if draw == True:
-        #                 cv2.circle(image,j,2,(0,0,255),-1)
 				
 def find_white_in_black(thin_img):
     pixels = np.argwhere(thin_img == 255)
@@ -289,10 +254,6 @@ def new_find_point_symbol():
         cv2.imshow("swqe",img3)
 
 
-# def new_connected_symbol_path()
-#     global list_all_point_path ,image ,list_contours_box_symbol ,list_contours_path
-    
-
 def auto_canny(image, sigma=0.33):
 	# compute the median of the single channel pixel intensities
 	v = np.median(image)
@@ -363,7 +324,6 @@ if __name__ == "__main__":
     black_image4 = cv2.dilate(black_image4,Kernel_morp_use,iterations = 3)
 
 
-
     black_image = np.zeros((resolution_X, resolution_Y, 1), np.uint8)
     fill_path_image = cv2.fillPoly(black_image, [contours[1]], color=(255,255,255))
     _,filled_path_binary = cv2.threshold(fill_path_image,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
@@ -378,12 +338,12 @@ if __name__ == "__main__":
 
 
     add_point_to_list(hierarchy.tolist()[0]) 
-    connected_symbol_path(list_contours_box_symbol,const = 30,draw=True)
+    # connected_symbol_path(list_contours_box_symbol,const = 30,draw=True)
     # find_point_symbol(list_symbol_template)
     # new_find_point_symbol()
     # print(list_contours_path)
-    # thin_point_path(list_contours_path,draw=True)
-    point_path(list_contours_path,draw=True)
+    thin_point_path(list_contours_path,draw=True)
+    # point_path(list_contours_path,draw=True)
 
     cv2.imshow("img_show",image) 
     # plot3D(list_all_point_path)

@@ -1,22 +1,7 @@
-import serial
-import cv2
-from time import sleep
-from math import sqrt
 
 def bytesy(integer):
     return divmod(integer, 0x100)
 
-PIC = serial.Serial(
-    port = "COM9",
-    baudrate = 115200,
-    timeout=1
-)
-
-Arduino = serial.Serial(
-    port = "COM23",
-    baudrate = 115200,
-    timeout=1
-)
 
 def Flush_Print_Mutil_Type(Data_Frame,method = "int"):
     if method.lower() == 'int':
@@ -26,15 +11,6 @@ def Flush_Print_Mutil_Type(Data_Frame,method = "int"):
 
 
 
-def Flush_Take_Photo(number):
-    cap = cv2.VideoCapture(1+cv2.CAP_DSHOW)
-    cap.set(3,1600)
-    cap.set(4,900)
-    sleep(1)
-    cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
-    _, frame = cap.read()
-    cv2.imwrite(r"C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Communication\Rail_Photo\Photo" + str(number)+".jpg",frame)
-    cap.release()
 
 def Flush_Reset(PIC):
     PIC.rts = 1
@@ -98,71 +74,23 @@ def Calculate_Trajectory_Time(Position_X,Position_Y):
     time = (sqrt((Delta_y * Delta_y) + (Delta_x * Delta_x))) / 7.0
     return int(time)
 
-PIC.rts = 0
 
-# Flush_Reset()
-sleep(2)
-
-List_of_Position = [(360,50),(360,150),(360,250),(360,350),(360,100),(360,200),(360,300),
-(380,50),(380,150),(380,250),(380,350),(380,100),(380,200),(380,300),
-(400,50),(400,150),(400,250),(400,350),(400,100),(400,200),(400,300),
-(420,50),(420,150),(420,250),(420,350),(420,100),(420,200),(420,300)]
-
-# PIC.write(cmd('Start Timer'))
-PIC.read()
-num = 0
-
-# print(Calculate_Trajectory_Time(200,200))
-for Position in cmd:
-    num += 1
-    PIC.write((Flush_PositionXY(*Position)))
+def Flush_DriverXY(Data,PIC):
+    PIC.write(Data)
     while(PIC.read() != b'\xac'):
         pass
+
+
+def Flush_Call_Time_PIC(PIC):
     PIC.write(Flush_Command(method = 'Call time'))
     while(PIC.read() != b'\xac'):
         pass
     Time = Decode_Data(PIC.readline())
-    print(Time)
-    Arduino.write(Flush_PositionZ_Gripper(Position[1],0,20,Time))
+    return PIC.write(Flush_Command(method = 'Start timer'))
+
+def Flush_Drive_Si_Sas(PIC):
     PIC.write(Flush_Command(method = 'Start timer'))
     while(PIC.read() != b'\xac'):
         pass
     while(PIC.read() != b'\xca'):
         pass
-    Flush_Take_Photo(num)
-    # PIC.write(Flush_Command('callpositionxandy'))
-    # print(PIC.read())
-    # Position_From_PIC = str(PIC.readline())
-
-# print(Position_From_PIC)
-# pose_x , pose_y = (Decode_Data(Position_From_PIC))
-
-
-
-
-# PIC.write()
-# for position in cmd:
-    
-    # Flush_Print_Mutil_Type(Flush_PositionXY(*position),method = 'HEX')
-    # print(Flush_Command(method = 'Call Position X and Y'))
-    # PIC.write(Flush_Command(method = 'Call Position X and Y'))
-    # sleep(0.5)
-    # while(PIC.read() != b'\xca'):
-    #     pass
-    # print(PIC.read())
-
-    # PIC.write(Flush_PositionXY(*position,method='byte'))
-    # while(PIC.read() != b'\xac'):
-    #     pass
-        
-    # PIC.write(Flush_Command(method = 'Start timer'))
-    # while(PIC.read() != b'\xac'):
-    #     pass
-    # while(PIC.read() != b'\xca'):
-    #     pass
-    # sleep(1)
-    # Flush_Take_Photo(num)
-    # num += 1
-
-
-PIC.close()
