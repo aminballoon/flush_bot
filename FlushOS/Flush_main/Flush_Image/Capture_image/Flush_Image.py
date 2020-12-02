@@ -5,6 +5,8 @@ from cv2 import aruco
 import matplotlib.pyplot as plt
 import json
 from math import sqrt
+from MTM import matchTemplates
+
 def find_color(img,x,y):
 	return img[y,x]
 
@@ -41,16 +43,17 @@ def find_middle(x1, y1, x2, y2):
 	yy = int(min_y + ((max_y-min_y)/2))
 	return (xx,yy)
 
-def find_point_symbol(list_template):
+def find_point_symbol(image,list_template):
+    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) 
     for template in list_template:
         listTemplate = [('template', template)]
         for i,angle in enumerate([90,180]):
             rotated = np.rot90(template, k=i+1) # NB: np.rotate not good here, turns into float!
             listTemplate.append( (str(angle), rotated ) )
-        Hits = matchTemplates(listTemplate, image_gray, N_object=1, score_threshold=0.6, method=cv2.TM_CCOEFF_NORMED, maxOverlap=0.3)
+        Hits = matchTemplates(listTemplate, image_gray, N_object=1, score_threshold=0.7, method=cv2.TM_CCOEFF_NORMED, maxOverlap=0.1)
         point = Hits.values.tolist()[0][1]
         point_plot = (int(point[0]+(point[2]/2)),int(point[1]+(point[3]/2)))
-
+        print(point_plot)
         cv2.circle(image,point_plot,2,(0,255,0),-1)
 
 def sampling(x1,y1,x2,y2,prescaler=2):
@@ -84,6 +87,13 @@ def add_point_to_list(hie):
             #     if area in range(0 , 50600):
             #         list_contours_path.append(hie.index(i))
 
+def plot3D(point):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    for i in point:
+        ax.scatter(i[1],i[0],i[2])
+    plt.show()
+
 def point_path_conner(image,contours,list_path,draw = True):
     for k in list_path:
         epsilon = 0.02 * cv2.arcLength(contours[k], True)
@@ -99,18 +109,11 @@ def point_path_conner(image,contours,list_path,draw = True):
             x = list_approx[i][0] - j[0]
             y = list_approx[i][1] - j[1]
             ans = int(sqrt((y*y)+(x*x)))
-            if ans in range(30,50):
+            if ans in range(40,70):
                 print(list_approx[i],j,ans)
                 cv2.circle(image, (list_approx[i][0],list_approx[i][1])  , 3, (255, 255, 0), -1)
                 cv2.circle(image, (j[0],j[1])  , 3, (0, 255, 255), -1)
                 cv2.circle(image, find_middle(j[0],j[1],list_approx[i][0],list_approx[i][1])  , 3, (255, 255, 255), -1)
-
-def plot3D(point):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    for i in point:
-        ax.scatter(i[1],i[0],i[2])
-    plt.show()
 
 def thin_point_path(image,list_path,resolution_X,resolution_Y,contours,Kernel_morp_use,draw = True):
     # global list_all_point_path 
@@ -126,7 +129,7 @@ def thin_point_path(image,list_path,resolution_X,resolution_Y,contours,Kernel_mo
         filled_path_binary = cv2.dilate(filled_path_binary,Kernel_morp_use,iterations = 5 )
         thin_image = cv2.ximgproc.thinning(filled_path_binary,thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)
         point_thin = find_white_in_black(thin_image)
-        cv2.imwrite("img.png",thin_image) 
+        # cv2.imwrite("thin_img.png",thin_image) 
         for k in point_thin:
             x = k[0]
             y = k[1]
@@ -134,10 +137,65 @@ def thin_point_path(image,list_path,resolution_X,resolution_Y,contours,Kernel_mo
             kernely =  [thin_image[y-1,x-1],thin_image[y,x-1],thin_image[y+1,x-1],
                         thin_image[y-1,x],thin_image[y,x],thin_image[y+1,x],
                         thin_image[y-1,x+1],thin_image[y,x+1],thin_image[y+1,x+1]] 
-            if sum(kernely) <= 510:
-                cv2.circle(image,(x,y),4,(0,0,255),-1)
-                
 
+            offset = 10
+            if sum(kernely) <= 510:
+                # cv2.circle(image,(x,y),4,(255,255,255),-1)
+                # print(thin_image[y,x-1])
+                # print(thin_image[y,x])
+                # cv2.circle(image,(x,y),4,(0,0,255),-1)
+
+                list_line.append(k)
+
+                # Check_Up = sum([thin_image[y,x-1],thin_image[y,x]])
+                # Check_Up_Right = sum([thin_image[y+1,x-1],thin_image[y,x]])
+                # Check_Right = sum([thin_image[y+1,x],thin_image[y,x]])
+                # Check_Down_Right = sum([thin_image[y+1,x+1],thin_image[y,x]])
+                # Check_Down = sum([thin_image[y,x+1],thin_image[y,x]])
+                # Check_Down_Left = sum([thin_image[y-1,x+1],thin_image[y,x]])
+                # Check_Left = sum([thin_image[y-1,x],thin_image[y,x]])
+                # Check_Up_Left = sum([thin_image[y-1,x-1],thin_image[y,x]])
+
+                # if Check_Up == 510:
+                #     cv2.circle(image,(x,y+offset),4,(255,255,255),-1)
+                # if Check_Up_Right == 510:
+                #     cv2.circle(image,(x+offset,y-offset),4,(255,255,255),-1)
+                # if Check_Right == 510:
+                #     cv2.circle(image,(x,y-offset-10),4,(255,255,255),-1)
+                # if Check_Down_Right== 510:
+                #     cv2.circle(image,(x-offset,y-offset),4,(255,255,255),-1)
+                # if Check_Down== 510:
+                #     cv2.circle(image,(x,y-offset),4,(255,255,255),-1)
+                # if Check_Down_Left== 510:
+                #     cv2.circle(image,(x-offset,y+offset),4,(255,255,255),-1)
+                # if Check_Left== 510:
+                #     cv2.circle(image,(x,y+offset),4,(255,255,255),-1)
+                # if Check_Up_Left== 510:
+                #     cv2.circle(image,(x+offset,y+offset),4,(255,255,255),-1)
+
+        # for u in range(len(list_line) - 2):
+        #     print(u)
+
+        con, _ = cv2.findContours(thin_image , cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) 
+        epsilon = 0.02 * cv2.arcLength(con[0],closed=False)
+        approx = cv2.approxPolyDP(con[0], epsilon, closed=True)
+        list_approx = []
+
+        for j in approx.tolist():
+            list_approx.append(j[0])
+        list_use = []
+        print(list_approx)
+        
+            
+                # cv2.line(blacked,List_of_Position[i],List_of_Position[i+1],(255,255,255))
+
+        # print(list_approx)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        for p in list_approx:
+            cv2.circle(image,(p[0],p[1]),4,(241,12,255),-1)
+            cv2.putText(image, (str(p[1]) + ","+ str(p[0])), (p[0],p[1]), font, 0.5, (255,0,0), 2)
+            print(p)
+        
     # for i in list_line:
     #     for w in range(0,len(i),Set_Prescaler):
     #         # cv2.circle(image,i[w],2,(0,255,255),-1)
@@ -150,7 +208,6 @@ def DrawContours_on_Blacked_image(contours,List_number_of_contour,res_X,res_Y):
     #cv2.dilate(black_image,Kernel_morp_use,iterations = 3) 
     return black_image
 
-    
 def Screening_PATH(contours,MinArea,MaxArea):
     list_contours_path = []
     for i in range(0, len(contours)):
@@ -161,12 +218,15 @@ def Screening_PATH(contours,MinArea,MaxArea):
                 list_contours_path.append(i)
     return list_contours_path
 
-def Flush_ImageProcessing(image,Path_symbol):
-    with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Image\Moduel_image\parameter.json') as json_file:
+
+# def Take_Photo_Symbol():
+    
+def Flush_ImageProcessing(image,Path_symbol,method = 'thining'):
+    with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\parameter.json') as json_file:
         data = json.load(json_file)
     Parametersy = (data['Parameter'][0])
     
-    image = cv2.fastNlMeansDenoising(image, None, 10, 7, 21)
+    # image = cv2.fastNlMeansDenoising(image, None, 10, 7, 21)
 
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -193,8 +253,12 @@ def Flush_ImageProcessing(image,Path_symbol):
     contour_use = Screening_PATH(contours,minArea,maxArea)
     DrawContours_on_Blacked_image(contours,contour_use,resolution_X,resolution_Y)
     black_image = np.zeros((resolution_X, resolution_Y, 1), np.uint8)
-    # thin_point_path(image,contour_use,resolution_X,resolution_Y,contours,Kernel_morp_use,draw=True)
-    point_path_conner(image,contours,contour_use,draw = True)
+
+    find_point_symbol(image,[cv2.imread(file,0) for file in glob.glob(Path_symbol)])
+    if method == 'thining':
+        thin_point_path(image,contour_use,resolution_X,resolution_Y,contours,Kernel_morp_use,draw=True)
+    else:
+        point_path_conner(image,contours,contour_use,draw = True)
     # fill_path_image = cv2.fillPoly(black_image, [contours[1]], color=(255,255,255))
     
     return image 
@@ -204,5 +268,3 @@ def Flush_ImageProcessing(image,Path_symbol):
     
 
 
-
-    

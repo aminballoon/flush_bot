@@ -2,17 +2,18 @@ import cv2
 import numpy as np
 import json
 
-with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Image\Moduel_image\parameter.json') as json_file:
+with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\parameter.json') as json_file:
     data = json.load(json_file)
     Parametersy = (data['Parameter'][0])
 
-image = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\test.png')
+image = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\Image_Anti_Obstacle2020_12_02_22_35_33_912603.png')
+# image = image[45:555, 45:555]
 # image = cv2.medianBlur(image,9)
 # kernel = np.array([[-1,-1,-1],
 #                     [-1, 9,-1],
 #                     [-1,-1,-1]])
 # sharpened = cv2.filter2D(image, -1, kernel) 
-image=cv2.fastNlMeansDenoising(image, None, 10, 7, 21)
+# image=cv2.fastNlMeansDenoising(image, None, 10, 7, 21)
 
 image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         
@@ -151,11 +152,11 @@ if save == 1:
     data['Parameter'] = []
     data['Parameter'].append({
         # 'Kernel_blur': (int(((Kernel_blur+1)/2)-1)),
-        'Kernel_blur': Kernel_blur,
+        'Kernel_blur': ((cv2.getTrackbarPos("Kernel_blur","image_blur")+1)*2)-1,
         'Canny_Thres_1': Canny_Thres_1,
         'Canny_Thres_2': Canny_Thres_2,
         # 'Kernel_morp': (int(((Kernel_morp)/2)-1)),
-        'Kernel_morp': Kernel_morp,
+        'Kernel_morp': ((cv2.getTrackbarPos("Kernel_morp","image_morp")+1)*2)-1,
         'Mode_morp': Mode_morp,
         'iterations': iterations,
         'minArea' : minArea,
@@ -163,7 +164,7 @@ if save == 1:
         'maxArea': int(maxArea)
     })
     
-    with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Image\Moduel_image\parameter.json', 'w') as outfile:
+    with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\parameter.json', 'w') as outfile:
         json.dump(data, outfile)
 
     # data['blur'].append({

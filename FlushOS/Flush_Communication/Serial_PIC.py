@@ -50,7 +50,7 @@ def Flush_PositionZ_Gripper(Position_Z,Orentation,Position,Time,method='bytey'):
     if method.lower() == 'bytey':
         return bytearray(Data_Frame)
 
-def Flush_PositionXY(Position_X,Position_Y,method='bytey'):
+def Flush_PositionXY(Position_X,Position_Y,Position_Z=0,method='bytey'):
     Data_Frame = [0xBD,0x40,*bytesy(Position_X),*bytesy(Position_Y)]
     CheckSum = ( ~(sum(Data_Frame[1:])) % 256 ) % 256
     Data_Frame.extend([CheckSum])
@@ -103,17 +103,25 @@ PIC.rts = 0
 # Flush_Reset()
 sleep(2)
 
-List_of_Position = [(360,50),(360,150),(360,250),(360,350),(360,100),(360,200),(360,300),
-(380,50),(380,150),(380,250),(380,350),(380,100),(380,200),(380,300),
-(400,50),(400,150),(400,250),(400,350),(400,100),(400,200),(400,300),
-(420,50),(420,150),(420,250),(420,350),(420,100),(420,200),(420,300)]
+# List_of_Position = [
+# (365,50),(365,150),(365,250),(365,350),(365,100),(365,200),(365,300),(365,400),(300,400),
+# (380,50),(380,150),(380,250),(380,350),(380,100),(380,200),(380,300),(380,400),
+# (400,50),(400,150),(400,250),(400,350),(400,100),(400,200),(400,300),(400,400),
+# (420,50),(420,150),(420,250),(420,350),(420,100),(420,200),(420,300),(420,400)]
 
+List_of_Position = [(285, 145),(191, 308),(151, 324)]
+# List_of_Position = [(297, 197,100),
+# (334, 204,100),
+# (334, 341,100),
+# (133, 341,200)]
+
+# List_of_Position = [(247,199,80),(148,200,180),(68, 205,180)]
 # PIC.write(cmd('Start Timer'))
 PIC.read()
 num = 0
 
 # print(Calculate_Trajectory_Time(200,200))
-for Position in cmd:
+for Position in List_of_Position:
     num += 1
     PIC.write((Flush_PositionXY(*Position)))
     while(PIC.read() != b'\xac'):
@@ -122,14 +130,15 @@ for Position in cmd:
     while(PIC.read() != b'\xac'):
         pass
     Time = Decode_Data(PIC.readline())
-    print(Time)
-    Arduino.write(Flush_PositionZ_Gripper(Position[1],0,20,Time))
+    # print(Time)
+    # Arduino.write(Flush_PositionZ_Gripper(Position[2],0,20,Time))
     PIC.write(Flush_Command(method = 'Start timer'))
     while(PIC.read() != b'\xac'):
         pass
     while(PIC.read() != b'\xca'):
         pass
-    Flush_Take_Photo(num)
+    if Position != (300,400):
+        Flush_Take_Photo(num)
     # PIC.write(Flush_Command('callpositionxandy'))
     # print(PIC.read())
     # Position_From_PIC = str(PIC.readline())

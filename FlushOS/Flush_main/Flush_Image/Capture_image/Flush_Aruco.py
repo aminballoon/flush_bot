@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib as mpl
 import glob
 from cv2 import aruco
-
+import datetime
 
 def line_intersection(line1, line2):
     # reference https://stackoverflow.com/questions/20677795/how-do-i-compute-the-intersection-point-of-two-lines
@@ -72,6 +72,8 @@ def Delete_obstacle(PATH_to_Capture_Folder):
     for name in glob.glob(PATH_to_Capture_Folder + '\*.jpg'):
         img = cv2.imread(str(name))
         img,check = Flush_Perspectrive(img)
+        img = img[25:375, 25:375]
+        img = cv2.resize(img, (400, 400)) 
         if check == 0:
             b_list.append(img[:,:,0])
             g_list.append(img[:,:,1])
@@ -84,10 +86,11 @@ def Delete_obstacle(PATH_to_Capture_Folder):
     r_med = np.median(r_list, axis=0)
     bgr = np.dstack((b_med,g_med,r_med))
     # bgr = crop_img(bgr,0.9)
-    cv2.imwrite(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\Image_Anti_Obstacle.png',bgr)
+    Date = str(datetime.datetime.now()).replace("-","_").replace(" ","_").replace(":","_").replace(".","_")
+    cv2.imwrite(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\Image_Anti_Obstacle' + Date + '.png',bgr)
     cv2.waitKey(0)
 
-def Flush_Take_Photo(PIC):
+# def Flush_Take_Photo(PIC):
     
 
 

@@ -1,0 +1,1 @@
+{"Parameter": [{"Kernel_blur": 3, "Canny_Thres_1": 150, "Canny_Thres_2": 110, "Kernel_morp": 7, "Mode_morp": 2, "iterations": 1, "minArea": 9465, "maxArea": 247}]}
