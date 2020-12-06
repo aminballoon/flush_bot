@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from math import sqrt,pi,atan2,degrees,cos,sin
 # List_of_Position = [(200,200),
 # (257, 172),
 # (295, 178),
@@ -109,12 +110,84 @@ import numpy as np
 # print(Sam_OOk(Kuy,50))
 
 
-top_row =    [32, 31, 30, 29, 28, 27, 26, 25, 24]
-left_row =   [32, 1, 2, 3, 4, 5, 6, 7, 8]
-right_row =   [24, 23, 22, 21, 20, 19, 18, 17, 16]
-bottom_row = [8, 9, 10, 11, 12, 13, 14, 15, 16]
+# top_row =    [32, 31, 30, 29, 28, 27, 26, 25, 24]
+# left_row =   [32, 1, 2, 3, 4, 5, 6, 7, 8]
+# right_row =   [24, 23, 22, 21, 20, 19, 18, 17, 16]
+# bottom_row = [8, 9, 10, 11, 12, 13, 14, 15, 16]
 
-print(top_row[::-1])
-print(left_row[::-1])
-print(right_row[::-1])
-print(bottom_row[::-1])
+# print(top_row[::-1])
+# print(left_row[::-1])
+# print(right_row[::-1])
+# print(bottom_row[::-1])
+
+
+# def Born_To_be_Flushbot(list_cmd):
+#     ans = []
+#     for i in range(len(list_cmd)-1):
+#         if i == 0:
+#             ans.append(list_cmd[0] + (0,))
+#         elif i == 1:
+#             ans.append((0,0,list_cmd[1][2]))
+#             ans.append(list_cmd[i])
+#         # if i == len(list_cmd)-2:
+#         #     ans.append(list_cmd[i])
+#         else:
+#             ans.append(list_cmd[i])
+#         print(i , ans)
+#     ans.append(list_cmd[-1]+(list_cmd[-2][2],))
+#     return ans
+
+# print(Born_To_be_Flushbot([(330, 72), (230, 77, 270), (196, 92, 270), (113, 240, 170), (67, 306)]))
+
+#List_of_Position = [(330, 72, 0), (0, 0, 270),(230, 77, 270), (196,92, 270),(113, 240, 180), (67, 306, 170)]
+
+# def Targectory_Gen(x1,y1,x2,y2):
+#     P1 = (x1,y1)
+#     P2 = (x2,y2)
+#     delta_x = P2[0]-P1[0]
+#     delta_y = P2[1]-P1[1]
+#     r = sqrt(pow(delta_x,2)+pow(delta_y,2))
+    
+#     Theta = atan2(delta_y,delta_x)
+#     Theta = int(degrees(Theta))
+#     if Theta < 0:
+#         Theta += 180 
+#     Theta = Theta/2
+#     return int(r),int(Theta), int(r*cos(Theta)) , int(r*sin(Theta))
+
+# for Theta in range(-180,0):
+#     P = Theta
+#     if Theta < 0:
+#         Theta += 180 
+#     # if Theta > 90:
+#     #     Theta = 180 - Theta 
+#     print(P,Theta)
+
+# List_of_Position =  [(54, 330+5, 0),(0,0,260),
+# (143, 329+5, 250),
+# (247, 318+5, 160),
+# (331, 213+5, 160),
+# (331, 142+5, 260),
+# (331, 53+5, 260),
+# (260, 55+5, 260),
+# (51, 50+5, 160),
+# (59, 190+5, 160),
+# (105, 193+5, 160),
+# (180, 191+5, 160)]
+
+# def Theta_isas(List_of_Position):
+#     ans = []
+#     _,Theta,_,_ = Targectory_Gen(List_of_Position[0][1],List_of_Position[0][0],List_of_Position[2][1],List_of_Position[2][0])
+#     ans.append(List_of_Position[0]+(Theta,))
+#     ans.append(List_of_Position[1]+(Theta,))
+#     for i in range(2,len(List_of_Position)-1):
+#         print(i,i+1)
+#         _,Theta,_,_ = Targectory_Gen(List_of_Position[i][1],List_of_Position[i][0],List_of_Position[i+1][1],List_of_Position[i+1][0])
+#         ans.append(List_of_Position[i]+(Theta,))
+#     _,Theta,_,_ = Targectory_Gen(List_of_Position[-2][1],List_of_Position[-2][0],List_of_Position[-1][1],List_of_Position[-1][0])
+#     ans.append(List_of_Position[-1]+(Theta,))
+#     return ans
+# print(Theta_isas(List_of_Position))
+
+# c = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\Image_Anti_Obstacle2020_12_06_00_46_00_601762.png',0)
+# cv2.imwrite(r"C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\222.png",c)

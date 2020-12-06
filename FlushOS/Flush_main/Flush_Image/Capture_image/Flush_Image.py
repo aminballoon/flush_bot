@@ -9,13 +9,13 @@ from MTM import matchTemplates
 import skimage.exposure
 from skimage.morphology import skeletonize
 import skimage.graph
-
+from math import sqrt,pi,atan2,degrees,cos,sin
 def Sam_OOk_isas(List_Point,thres):
     re = []
     ans = []
     for i in range(0,len(List_Point)):
         for j in range(i+1,len(List_Point)):
-            if (abs(List_Point[i][0] - List_Point[j][0]) < thres) or (abs(List_Point[i][1] - List_Point[j][1]) < thres):
+            if (abs(List_Point[i][0] - List_Point[j][0]) < thres) and (abs(List_Point[i][1] - List_Point[j][1]) < thres):
                 re.append(j)
     for i in range(0,len(List_Point)):
         if i not in re:
@@ -39,11 +39,12 @@ def Sam_OOk(List_Point,thres=10):
 def find_color(img,x,y):
 	return img[y,x]
 
-def find_gradient(img,x,y,thres = 128):
+def find_gradient(img,x,y,thres = 140):
     if 255 - img[y,x] > thres:
-        return 200
+        return 255
     else:
-	    return 100
+	    return 155
+
 	
 def find_white_in_black(thin_img):
     pixels = np.argwhere(thin_img == 255)
@@ -78,6 +79,23 @@ def find_middle(x1, y1, x2, y2):
 	yy = int(min_y + ((max_y-min_y)/2))
 	return (xx,yy)
 
+def Born_To_be_Flushbot(list_cmd):
+    ans = []
+    for i in range(len(list_cmd)-1):
+        if i == 0:
+            ans.append(list_cmd[0] + (0,))
+        elif i == 1:
+            ans.append((0,0,list_cmd[1][2]))
+            ans.append(list_cmd[i])
+        # if i == len(list_cmd)-2:
+        #     ans.append(list_cmd[i])
+        else:
+            ans.append(list_cmd[i])
+        # print(i , ans)
+    ans.append(list_cmd[-1]+(list_cmd[-2][2],))
+    return ans
+    
+
 def find_point_symbol(image,list_template):
     font = cv2.FONT_HERSHEY_SIMPLEX
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) 
@@ -107,6 +125,19 @@ def find_point_symbol(image,list_template):
     # print(point_symbol)
     return point_symbol
 
+def Targectory_Gen(x1,y1,x2,y2):
+    P1 = (x1,y1)
+    P2 = (x2,y2)
+    delta_x = P2[0]-P1[0]
+    delta_y = P2[1]-P1[1]
+    r = sqrt(pow(delta_x,2)+pow(delta_y,2))
+    
+    Theta = atan2(delta_y,delta_x)
+    Theta = int(degrees(Theta))
+    if Theta < 0:
+        Theta += 180 
+    Theta = Theta/2
+    return int(r),int(Theta), int(r*cos(Theta)) , int(r*sin(Theta))
 
 def sampling(x1,y1,x2,y2,prescaler=2):
     dx = x2-x1
@@ -212,16 +243,16 @@ def thin_point_path(image,list_path,resolution_X,resolution_Y,contours,Kernel_mo
         for j in approx.tolist():
             list_approx.append(tuple(j[0]))
         
-        list_approx = Sam_OOk(list_approx,1)
+        list_approx = Sam_OOk_isas(list_approx,10)
         # print(list_approx)
 
         font = cv2.FONT_HERSHEY_SIMPLEX
         for p in list_approx:
             cv2.circle(image,(p[0],p[1]),4,(241,12,255),-1)
-            cv2.putText(image, (str(p[0]) + ","+ str(p[1])), (p[0],p[1]), font, 0.5, (255,0,0), 2)
-        for o in list_line:
-            cv2.circle(image,(o[0],o[1]),4,(0,0,255),-1)
-            cv2.putText(image, (str(o[0]) + ","+ str(o[1])), (o[0],o[1]), font, 0.5, (255,0,0), 2)
+            cv2.putText(image, (str(p[0]) + ","+ str(p[1])), (p[0],p[1]), font, 0.4, (0,0,255), 2)
+        # for o in list_line:
+        #     cv2.circle(image,(o[0],o[1]),4,(0,0,255),-1)
+        #     cv2.putText(image, (str(o[0]) + ","+ str(o[1])), (o[0],o[1]), font, 0.3, (255,0,0), 2)
             # print((p[0],p[1],find_gradient(image_gray,p[0],p[1])))
         # list_approx += list_line
         # print(list_approx)
@@ -263,14 +294,12 @@ def Screening_PATH(contours,MinArea,MaxArea):
 #             costs=np.where(binary,1,1000)
 #             path, cost = skimage.graph.route_through_array(costs, start=start, end=end, fully_connected=True)
 #             return path
-def Flush_Point_to_Control_1Thin(Flush_Point_Symbol,Flush_Point_Path,Flush_End_Point,Flush_Point_Control,list_line,resolution_X,resolution_Y,Thining_Image):
+def Flush_Point_to_Control_1Thin(Flush_Point_Symbol,Flush_Point_Path,Flush_End_Point,Flush_Point_Control,list_line,resolution_X,resolution_Y,Thining_Image,Image_Gray):
     # for i in list_line:
     # print("Flush_Point_Control")
     # print(Flush_Point_Control)
     # print("list_line")
     # print(list_line)
-    print(Flush_Point_Symbol)
-    print(list_line)
     for i in list_line:
         if i not in Flush_Point_Control:
             Flush_Point_Control.append(i)
@@ -306,14 +335,26 @@ def Flush_Point_to_Control_1Thin(Flush_Point_Symbol,Flush_Point_Path,Flush_End_P
         # print(XytoYX(*tuple(i)))
     Pathisas.append(Flush_Point_Symbol[0])
     for i in sorted(Cons):
-        Pathisas.append(tuple(i[1]))
-     
+        Pathisas.append(i[1] + (find_gradient(Image_Gray,*i[1]),))
+
     Pathisas.append(Flush_End_Point)
     Pathisas = Sam_OOk(Pathisas,thres=1)
+
     return Pathisas
 
 
-# def Take_Photo_Symbol():
+def Theta_isas(List_of_Position):
+    ans = []
+    _,Theta,_,_ = Targectory_Gen(List_of_Position[0][1],List_of_Position[0][0],List_of_Position[2][1],List_of_Position[2][0])
+    ans.append(List_of_Position[0]+(Theta,))
+    ans.append(List_of_Position[1]+(Theta,))
+    for i in range(2,len(List_of_Position)-1):
+        print(i,i+1)
+        _,Theta,_,_ = Targectory_Gen(List_of_Position[i][1],List_of_Position[i][0],List_of_Position[i+1][1],List_of_Position[i+1][0])
+        ans.append(List_of_Position[i]+(Theta,))
+    _,Theta,_,_ = Targectory_Gen(List_of_Position[-2][1],List_of_Position[-2][0],List_of_Position[-1][1],List_of_Position[-1][0])
+    ans.append(List_of_Position[-1]+(Theta,))
+    return ans
     
 def Flush_ImageProcessing(image,list_symbol_template,method = 'thining'):
     with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\parameter.json') as json_file:
@@ -358,10 +399,16 @@ def Flush_ImageProcessing(image,list_symbol_template,method = 'thining'):
     else:
         point_path_conner(image,contours,contour_use,draw = True)
     # fill_path_image = cv2.fillPoly(black_image, [contours[1]], color=(255,255,255))
-    Pathisas = Flush_Point_to_Control_1Thin(Flush_Point_Symbol,Flush_Point_Path,Flush_Point_Path[-1],Flush_Point_Control,list_line,resolution_X,resolution_Y,Thining_Image)
+    Pathisas = Flush_Point_to_Control_1Thin(Flush_Point_Symbol,Flush_Point_Path,Flush_Point_Path[-1],Flush_Point_Control,list_line,resolution_X,resolution_Y,Thining_Image,image_gray)
     # Pathisas = Flush_Point_to_Control_2Thin(Flush_Point_Symbol,Flush_Point_Path,Flush_Point_Path[-1],Flush_Point_Control,list_line,resolution_X,resolution_Y,Thining_Image)
     # Pathisas = Sam_OOk(Pathisas,thres=5)
+    
+    Pathisas = Born_To_be_Flushbot(Pathisas)
+    Pathisas = Theta_isas(Pathisas)
     print(Pathisas)
+
+    # for q in [(54 , 330),(112 , 329),(239 , 325),(331 , 236),(331 , 112),(331 , 53),(270 , 54),(59 , 57),(57 , 191),(114 , 193),(180 , 191)]:
+    #     print(q + (find_gradient(image_gray,*q),))
     return image 
 
     # _,filled_path_binary = cv2.threshold(fill_path_image,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)

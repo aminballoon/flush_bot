@@ -23,7 +23,7 @@ def click_event(event, x, y, flags, param):
 
 
 #Here, you need to change the image name and it's path according to your directory
-img = cv2.imread(r"C:\Users\aminb\Documents\GitHub\flush_bot\PATH_Image.png")
+img = cv2.imread(r"C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\Image_Anti_Obstacle2020_12_07_00_38_14_975985.png")
 cv2.imshow("image", img)
 
 #calling the mouse click event

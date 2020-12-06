@@ -7,7 +7,7 @@ def bytesy(integer):
 
 
 ser = serial.Serial(
-    port = "COM3",
+    port = "COM12",
     baudrate = 115200,
     timeout=1
 )
@@ -91,7 +91,9 @@ sleep(3)
 # ser.write(Flush_Position_Gripper(30))
 # sleep(3)
 
-ser.write(Flush_Position_Z(180,4000))
+ser.write(Flush_Position_Gripper(70))
+sleep(3)
+ser.write(Flush_Position_Z(110,3000))
 sleep(3)
 ser.write(Flush_Position_Gripper(25))
 sleep(3)
