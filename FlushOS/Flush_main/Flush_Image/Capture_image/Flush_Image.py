@@ -6,12 +6,44 @@ import matplotlib.pyplot as plt
 import json
 from math import sqrt
 from MTM import matchTemplates
+import skimage.exposure
+from skimage.morphology import skeletonize
+import skimage.graph
+
+def Sam_OOk_isas(List_Point,thres):
+    re = []
+    ans = []
+    for i in range(0,len(List_Point)):
+        for j in range(i+1,len(List_Point)):
+            if (abs(List_Point[i][0] - List_Point[j][0]) < thres) or (abs(List_Point[i][1] - List_Point[j][1]) < thres):
+                re.append(j)
+    for i in range(0,len(List_Point)):
+        if i not in re:
+            ans.append(List_Point[i])
+    return ans
+
+def Sam_OOk(List_Point,thres=10):
+    re = []
+    ans = []
+    for i in range(0,len(List_Point)):
+        for j in range(i+1,len(List_Point)):
+            one = (List_Point[i][0] - List_Point[j][0])
+            two = (List_Point[i][1] - List_Point[j][1])
+            if (sqrt((one*one)+(two*two)) < thres) :
+                re.append(j)
+    for i in range(0,len(List_Point)):
+        if i not in re:
+            ans.append(List_Point[i])
+    return ans
 
 def find_color(img,x,y):
 	return img[y,x]
 
-def find_gradient(img,x,y):
-	return 255 - img[y,x]
+def find_gradient(img,x,y,thres = 128):
+    if 255 - img[y,x] > thres:
+        return 200
+    else:
+	    return 100
 	
 def find_white_in_black(thin_img):
     pixels = np.argwhere(thin_img == 255)
@@ -21,6 +53,9 @@ def find_white_in_black(thin_img):
         if data not in lines:
             lines.append(data)
     return lines
+
+def XytoYX(x,y):
+    return (y,x)
 
 def remove_duplicates(x):
   return list(dict.fromkeys(x))
@@ -44,17 +79,34 @@ def find_middle(x1, y1, x2, y2):
 	return (xx,yy)
 
 def find_point_symbol(image,list_template):
+    font = cv2.FONT_HERSHEY_SIMPLEX
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) 
+    point_symbol = []
     for template in list_template:
+        # template = cv2.resize(template, (80, 80)) 
+        # template = cv2.flip(template, 1)
+        # template = template[10:90, 10:90]
+        # cv2.imshow("thin9",template) 
+        # cv2.waitKey(0)
         listTemplate = [('template', template)]
         for i,angle in enumerate([90,180]):
             rotated = np.rot90(template, k=i+1) # NB: np.rotate not good here, turns into float!
             listTemplate.append( (str(angle), rotated ) )
-        Hits = matchTemplates(listTemplate, image_gray, N_object=1, score_threshold=0.7, method=cv2.TM_CCOEFF_NORMED, maxOverlap=0.1)
+        Hits = matchTemplates(listTemplate, image_gray, N_object=1, score_threshold=0.4, method=cv2.TM_CCOEFF_NORMED, maxOverlap=1)
         point = Hits.values.tolist()[0][1]
-        point_plot = (int(point[0]+(point[2]/2)),int(point[1]+(point[3]/2)))
-        print(point_plot)
-        cv2.circle(image,point_plot,2,(0,255,0),-1)
+        # print(Hits)    
+        if float((Hits.values.tolist()[0][2])) >= 0.6:
+            point_plot = (int(point[0]+(point[2]/2)),int(point[1]+(point[3]/2)))
+            point_symbol.append(point_plot)
+
+    point_symbol = Sam_OOk_isas(point_symbol,thres=5)
+
+    for point in point_symbol:
+        cv2.putText(image, (str(point[0]) + ","+ str(point[1])), point, font, 0.5, (255,0,0), 2)    
+        cv2.circle(image,point,2,(0,255,0),-1)
+    # print(point_symbol)
+    return point_symbol
+
 
 def sampling(x1,y1,x2,y2,prescaler=2):
     dx = x2-x1
@@ -115,9 +167,17 @@ def point_path_conner(image,contours,list_path,draw = True):
                 cv2.circle(image, (j[0],j[1])  , 3, (0, 255, 255), -1)
                 cv2.circle(image, find_middle(j[0],j[1],list_approx[i][0],list_approx[i][1])  , 3, (255, 255, 255), -1)
 
+def shortest_path(start,end,binary):
+            costs=np.where(binary,1,1000)
+            path, cost = skimage.graph.route_through_array(costs, start=start, end=end, fully_connected=True)
+            return path
+
 def thin_point_path(image,list_path,resolution_X,resolution_Y,contours,Kernel_morp_use,draw = True):
-    # global list_all_point_path 
+    Thining_Image = []
+    list_approx = []
+    list_use = []
     list_line = []
+    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     black_image = np.zeros((resolution_X, resolution_Y, 1), np.uint8)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
     for i in list_path:
@@ -129,7 +189,8 @@ def thin_point_path(image,list_path,resolution_X,resolution_Y,contours,Kernel_mo
         filled_path_binary = cv2.dilate(filled_path_binary,Kernel_morp_use,iterations = 5 )
         thin_image = cv2.ximgproc.thinning(filled_path_binary,thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)
         point_thin = find_white_in_black(thin_image)
-        # cv2.imwrite("thin_img.png",thin_image) 
+        Thining_Image.append(thin_image)
+        cv2.imwrite("thin_img.png",thin_image) 
         for k in point_thin:
             x = k[0]
             y = k[1]
@@ -138,64 +199,44 @@ def thin_point_path(image,list_path,resolution_X,resolution_Y,contours,Kernel_mo
                         thin_image[y-1,x],thin_image[y,x],thin_image[y+1,x],
                         thin_image[y-1,x+1],thin_image[y,x+1],thin_image[y+1,x+1]] 
 
-            offset = 10
-            if sum(kernely) <= 510:
-                # cv2.circle(image,(x,y),4,(255,255,255),-1)
-                # print(thin_image[y,x-1])
-                # print(thin_image[y,x])
-                # cv2.circle(image,(x,y),4,(0,0,255),-1)
-
+            offset = 5
+            if sum(kernely) <= 511:
                 list_line.append(k)
 
-                # Check_Up = sum([thin_image[y,x-1],thin_image[y,x]])
-                # Check_Up_Right = sum([thin_image[y+1,x-1],thin_image[y,x]])
-                # Check_Right = sum([thin_image[y+1,x],thin_image[y,x]])
-                # Check_Down_Right = sum([thin_image[y+1,x+1],thin_image[y,x]])
-                # Check_Down = sum([thin_image[y,x+1],thin_image[y,x]])
-                # Check_Down_Left = sum([thin_image[y-1,x+1],thin_image[y,x]])
-                # Check_Left = sum([thin_image[y-1,x],thin_image[y,x]])
-                # Check_Up_Left = sum([thin_image[y-1,x-1],thin_image[y,x]])
-
-                # if Check_Up == 510:
-                #     cv2.circle(image,(x,y+offset),4,(255,255,255),-1)
-                # if Check_Up_Right == 510:
-                #     cv2.circle(image,(x+offset,y-offset),4,(255,255,255),-1)
-                # if Check_Right == 510:
-                #     cv2.circle(image,(x,y-offset-10),4,(255,255,255),-1)
-                # if Check_Down_Right== 510:
-                #     cv2.circle(image,(x-offset,y-offset),4,(255,255,255),-1)
-                # if Check_Down== 510:
-                #     cv2.circle(image,(x,y-offset),4,(255,255,255),-1)
-                # if Check_Down_Left== 510:
-                #     cv2.circle(image,(x-offset,y+offset),4,(255,255,255),-1)
-                # if Check_Left== 510:
-                #     cv2.circle(image,(x,y+offset),4,(255,255,255),-1)
-                # if Check_Up_Left== 510:
-                #     cv2.circle(image,(x+offset,y+offset),4,(255,255,255),-1)
-
-        # for u in range(len(list_line) - 2):
-        #     print(u)
-
+        # print(list_line)
         con, _ = cv2.findContours(thin_image , cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) 
-        epsilon = 0.02 * cv2.arcLength(con[0],closed=False)
+        epsilon = 0.005 * cv2.arcLength(con[0],closed=True)
         approx = cv2.approxPolyDP(con[0], epsilon, closed=True)
-        list_approx = []
+        
 
         for j in approx.tolist():
-            list_approx.append(j[0])
-        list_use = []
-        print(list_approx)
+            list_approx.append(tuple(j[0]))
         
-            
-                # cv2.line(blacked,List_of_Position[i],List_of_Position[i+1],(255,255,255))
-
+        list_approx = Sam_OOk(list_approx,1)
         # print(list_approx)
+
         font = cv2.FONT_HERSHEY_SIMPLEX
         for p in list_approx:
             cv2.circle(image,(p[0],p[1]),4,(241,12,255),-1)
-            cv2.putText(image, (str(p[1]) + ","+ str(p[0])), (p[0],p[1]), font, 0.5, (255,0,0), 2)
-            print(p)
+            cv2.putText(image, (str(p[0]) + ","+ str(p[1])), (p[0],p[1]), font, 0.5, (255,0,0), 2)
+        for o in list_line:
+            cv2.circle(image,(o[0],o[1]),4,(0,0,255),-1)
+            cv2.putText(image, (str(o[0]) + ","+ str(o[1])), (o[0],o[1]), font, 0.5, (255,0,0), 2)
+            # print((p[0],p[1],find_gradient(image_gray,p[0],p[1])))
+        # list_approx += list_line
+        # print(list_approx)
+    return thin_image , list_approx , list_line , Thining_Image
         
+
+        # path=(shortest_path((324,100),(145-20,285-+0),thin_image))
+        # print(path)
+        # blackeded = np.zeros((resolution_X,resolution_Y , 1), np.uint8)
+        # for i in path:
+        #     cv2.circle(blackeded,(i[1],i[0]),1,(255,255,255),-1)
+        # cv2.imshow("sasdd",thin_image)
+        # cv2.imshow("sd",blackeded)
+        # cv2.waitKey(0)
+
     # for i in list_line:
     #     for w in range(0,len(i),Set_Prescaler):
     #         # cv2.circle(image,i[w],2,(0,255,255),-1)
@@ -218,13 +259,68 @@ def Screening_PATH(contours,MinArea,MaxArea):
                 list_contours_path.append(i)
     return list_contours_path
 
+# def shortest_path(start,end,binary):
+#             costs=np.where(binary,1,1000)
+#             path, cost = skimage.graph.route_through_array(costs, start=start, end=end, fully_connected=True)
+#             return path
+def Flush_Point_to_Control_1Thin(Flush_Point_Symbol,Flush_Point_Path,Flush_End_Point,Flush_Point_Control,list_line,resolution_X,resolution_Y,Thining_Image):
+    # for i in list_line:
+    # print("Flush_Point_Control")
+    # print(Flush_Point_Control)
+    # print("list_line")
+    # print(list_line)
+    print(Flush_Point_Symbol)
+    print(list_line)
+    for i in list_line:
+        if i not in Flush_Point_Control:
+            Flush_Point_Control.append(i)
+    # Flush_Point_Control = Sam_OOk(Flush_Point_Control,thres=3)
+    # list_line = Sam_OOk(list_line,thres=1)
+    Pathisas = []
+    Cons = []
+    Delta_x1 = (Flush_Point_Symbol[0][0] - list_line[0][0])
+    Delta_y1 = (Flush_Point_Symbol[0][1] - list_line[0][1])
+    Delta_x2 = (Flush_Point_Symbol[0][0] - list_line[1][0])
+    Delta_y2 = (Flush_Point_Symbol[0][1] - list_line[1][1])
+    if len(Flush_Point_Symbol) >= 2:
+        Flush_End_Point = Flush_Point_Symbol[-1]
+    else:
+        if abs(sqrt(pow(Delta_x1+Delta_y1,2))) > abs(sqrt(pow(Delta_x2+Delta_y2,2))):
+            Flush_End_Point = list_line[1]
+        else:
+            Flush_End_Point = list_line[0]
+    path = shortest_path((Flush_Point_Symbol[0][1],Flush_Point_Symbol[0][0]),(Flush_End_Point[1],Flush_End_Point[0]),Flush_Point_Path)
+    blackeded = np.zeros((resolution_X,resolution_Y , 1), np.uint8)
+        # if Flush_Point_Symbol[0][0] - list_line[0]
+    # for i in path:
+    #     cv2.circle(blackeded,(i[1],i[0]),1,(255,255,255),-1)
+    
+    # cv2.imshow("sssssasdd",Flush_Point_Path)
+    # cv2.imshow("sasdd",blackeded)
+    # print(Flush_Point_Control)
+    # print(path)
+    # print(path)
+    for i in Flush_Point_Control:
+        if XytoYX(*tuple(i)) in path:
+            Cons.append([path.index(XytoYX(*tuple(i))),i])
+        # print(XytoYX(*tuple(i)))
+    Pathisas.append(Flush_Point_Symbol[0])
+    for i in sorted(Cons):
+        Pathisas.append(tuple(i[1]))
+     
+    Pathisas.append(Flush_End_Point)
+    Pathisas = Sam_OOk(Pathisas,thres=1)
+    return Pathisas
+
 
 # def Take_Photo_Symbol():
     
-def Flush_ImageProcessing(image,Path_symbol,method = 'thining'):
+def Flush_ImageProcessing(image,list_symbol_template,method = 'thining'):
     with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\parameter.json') as json_file:
         data = json.load(json_file)
     Parametersy = (data['Parameter'][0])
+    Point_Symbol = []
+    Point_Path = []
     
     # image = cv2.fastNlMeansDenoising(image, None, 10, 7, 21)
 
@@ -251,16 +347,21 @@ def Flush_ImageProcessing(image,Path_symbol,method = 'thining'):
     maxArea = Parametersy['maxArea']
     minArea = Parametersy['minArea']
     contour_use = Screening_PATH(contours,minArea,maxArea)
-    DrawContours_on_Blacked_image(contours,contour_use,resolution_X,resolution_Y)
+    blackedqq = DrawContours_on_Blacked_image(contours,contour_use,resolution_X,resolution_Y)
+    cv2.imshow("ssdsw",blackedqq)
     black_image = np.zeros((resolution_X, resolution_Y, 1), np.uint8)
 
-    find_point_symbol(image,[cv2.imread(file,0) for file in glob.glob(Path_symbol)])
+    Flush_Point_Symbol = find_point_symbol(image,list_symbol_template)
+    # print(Flush_Point_Symbol)
     if method == 'thining':
-        thin_point_path(image,contour_use,resolution_X,resolution_Y,contours,Kernel_morp_use,draw=True)
+        Flush_Point_Path,Flush_Point_Control,list_line ,Thining_Image= thin_point_path(image,contour_use,resolution_X,resolution_Y,contours,Kernel_morp_use,draw=True)
     else:
         point_path_conner(image,contours,contour_use,draw = True)
     # fill_path_image = cv2.fillPoly(black_image, [contours[1]], color=(255,255,255))
-    
+    Pathisas = Flush_Point_to_Control_1Thin(Flush_Point_Symbol,Flush_Point_Path,Flush_Point_Path[-1],Flush_Point_Control,list_line,resolution_X,resolution_Y,Thining_Image)
+    # Pathisas = Flush_Point_to_Control_2Thin(Flush_Point_Symbol,Flush_Point_Path,Flush_Point_Path[-1],Flush_Point_Control,list_line,resolution_X,resolution_Y,Thining_Image)
+    # Pathisas = Sam_OOk(Pathisas,thres=5)
+    print(Pathisas)
     return image 
 
     # _,filled_path_binary = cv2.threshold(fill_path_image,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)

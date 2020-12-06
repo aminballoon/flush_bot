@@ -6,7 +6,7 @@ with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_I
     data = json.load(json_file)
     Parametersy = (data['Parameter'][0])
 
-image = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\Image_Anti_Obstacle2020_12_02_22_35_33_912603.png')
+image = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\Image_Anti_Obstacle2020_12_06_02_44_54_892045.png')
 # image = image[45:555, 45:555]
 # image = cv2.medianBlur(image,9)
 # kernel = np.array([[-1,-1,-1],

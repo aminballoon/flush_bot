@@ -23,7 +23,7 @@ def click_event(event, x, y, flags, param):
 
 
 #Here, you need to change the image name and it's path according to your directory
-img = cv2.imread(r"C:\Users\aminb\Desktop\FIBO\Image\Moduel_image\test_field.jpg")
+img = cv2.imread(r"C:\Users\aminb\Documents\GitHub\flush_bot\PATH_Image.png")
 cv2.imshow("image", img)
 
 #calling the mouse click event

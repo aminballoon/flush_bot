@@ -28,7 +28,7 @@ def get_all_corner(corners, ids, list_of_corner_id):
 
 # c,d = (detect_aruco(cv2.imread(r"C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Communication\Rail_Photo\Photo0.jpg")))
 
-frame = cv2.imread(r"C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Communication\Rail_Photo\Photo12.jpg")
+frame = cv2.imread(r"C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Communication\Rail_Photo\Photo17.jpg")
 #dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_1000)
 dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
 #dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_ARUCO_ORIGINAL)

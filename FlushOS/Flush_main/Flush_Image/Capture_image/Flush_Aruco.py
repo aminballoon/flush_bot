@@ -30,10 +30,10 @@ def Flush_Perspectrive(image):
     parameters =  aruco.DetectorParameters_create()
     corners, ids, _ = aruco.detectMarkers(image_gray, aruco_dict, parameters=parameters)
     # aruco ids
-    top_row =    [16,15,14,13,12,11,10,9,8]
-    left_row =   [16,17,18,19,20,21,22,23,24]
-    right_row =  [8,7,6,5,4,3,2,1,32]
-    bottom_row = [24,25,26,27,28,29,30,31,32]
+    top_row =    [16, 15, 14, 13, 12, 11, 10, 9, 8]
+    left_row =   [16, 17, 18, 19, 20, 21, 22, 23, 24]
+    right_row =   [8, 7, 6, 5, 4, 3, 2, 1, 32]
+    bottom_row = [24, 25, 26, 27, 28, 29, 30, 31, 32]
     all_rows = []
     lines = []
     for row in [top_row,left_row,right_row,bottom_row]:
@@ -60,9 +60,9 @@ def Flush_Perspectrive(image):
     bottom_left  = line_intersection(lines[3],(lines[1]))
     bottom_right = line_intersection(lines[3],(lines[2]))
     pts1 = np.float32([top_left,top_right,bottom_left,bottom_right])
-    pts2 = np.float32([[0, 0], [0, 400], [400, 0], [400, 400]])
+    pts2 = np.float32([[0, 0], [0, 430], [430, 0], [430, 430]])
     matrix = cv2.getPerspectiveTransform(pts1, pts2)
-    result = cv2.warpPerspective(image, matrix, (400, 400))
+    result = cv2.warpPerspective(image, matrix, (430, 430))
     return result , check
 
 def Delete_obstacle(PATH_to_Capture_Folder):
@@ -72,8 +72,8 @@ def Delete_obstacle(PATH_to_Capture_Folder):
     for name in glob.glob(PATH_to_Capture_Folder + '\*.jpg'):
         img = cv2.imread(str(name))
         img,check = Flush_Perspectrive(img)
-        img = img[25:375, 25:375]
-        img = cv2.resize(img, (400, 400)) 
+        img = img[25:400, 25:400]
+        # img = cv2.resize(img, (400, 400)) 
         if check == 0:
             b_list.append(img[:,:,0])
             g_list.append(img[:,:,1])
