@@ -13,7 +13,6 @@ def Flush_Print_Mutil_Type(Data_Frame,method = "int"):
         print (" ".join(hex(x) for x in Data_Frame))
 
 
-
 def Flush_Take_Photo(number):
     cap = cv2.VideoCapture(1+cv2.CAP_DSHOW)
     cap.set(3,1600)
@@ -21,7 +20,7 @@ def Flush_Take_Photo(number):
     sleep(1)
     cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
     _, frame = cap.read()
-    cv2.imwrite(r"C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Communication\Rail_Photo\Photo" + str(number)+".jpg",frame)
+    cv2.imwrite(r"C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Flied_Image\Photo" + str(number)+".jpg",frame)
     cap.release()
 
 def Flush_Reset(PIC):
@@ -29,14 +28,14 @@ def Flush_Reset(PIC):
     sleep(4)
     PIC.rts = 0
 
-def Flush_PositionZ_Gripper(Position_Z,Orentation,Position,Time,method='bytey'):
-    Data_Frame = [0xBD,0x61,*bytesy(Position_Z),Orentation,Position,*bytesy(Time)]
-    CheckSum = ( ~(sum(Data_Frame[1:])) % 256 ) % 256
-    Data_Frame.extend([CheckSum])
-    if method.lower() == 'list':
-        return Data_Frame
-    if method.lower() == 'bytey':
-        return bytearray(Data_Frame)
+# def Flush_PositionZ_Gripper(Position_Z,Orentation,Position,Time,method='bytey'):
+#     Data_Frame = [0xBD,0x61,*bytesy(Position_Z),Orentation,Position,*bytesy(Time)]
+#     CheckSum = ( ~(sum(Data_Frame[1:])) % 256 ) % 256
+#     Data_Frame.extend([CheckSum])
+#     if method.lower() == 'list':
+#         return Data_Frame
+#     if method.lower() == 'bytey':
+#         return bytearray(Data_Frame)
 
 def Flush_PositionXY(Position_X,Position_Y,Position_Z=0,Orentation_Z=0,method='bytey'):
     Data_Frame = [0xBD,0x40,*bytesy(Position_X),*bytesy(Position_Y+5)]
@@ -75,16 +74,16 @@ def Decode_Data(Data):
     return int(float(Data)*1000) - 300
 
 
-def Calculate_Trajectory_Time(Position_X,Position_Y):
-    PIC.read()
-    PIC.write(Flush_Command('callpositionxandy'))
-    PIC.read()
-    Position_From_PIC = str(PIC.readline())
-    pose_x , pose_y = (Decode_Data(Position_From_PIC))
-    Delta_x = pose_x - (Position_X*154)
-    Delta_y = pose_y - (Position_Y*154)
-    time = (sqrt((Delta_y * Delta_y) + (Delta_x * Delta_x))) / 7.0
-    return int(time)
+# def Calculate_Trajectory_Time(Position_X,Position_Y):
+#     PIC.read()
+#     PIC.write(Flush_Command('callpositionxandy'))
+#     PIC.read()
+#     Position_From_PIC = str(PIC.readline())
+#     pose_x , pose_y = (Decode_Data(Position_From_PIC))
+#     Delta_x = pose_x - (Position_X*154)
+#     Delta_y = pose_y - (Position_Y*154)
+#     time = (sqrt((Delta_y * Delta_y) + (Delta_x * Delta_x))) / 7.0
+#     return int(time)
 
 def Flush_Position_Z(Position_Z,Time,method='bytey'):
     Data_Frame = [0xBD,0x61,*bytesy(Position_Z),*bytesy(Time)]
@@ -121,7 +120,11 @@ def Targectory_Gen(x1,y1,x2,y2):
     r = sqrt(pow(delta_x,2)+pow(delta_y,2))
     
     Theta = atan2(delta_y,delta_x)
-    return int(r),int(degrees(Theta))+180, int(r*cos(Theta)) , int(r*sin(Theta))
+    Theta = int(degrees(Theta))
+    if Theta < 0:
+        Theta += 180 
+    Theta = Theta/2
+    return int(r),int(Theta), int(r*cos(Theta)) , int(r*sin(Theta))
 
 # if __name__ == "__main__":
     # List_of_Position = [(330, 75, 0), (0, 0, 270),(230, 77, 270), (197,90, 270),(113, 240, 180), (69, 308, 170)]

@@ -87,20 +87,6 @@ def Delete_obstacle(PATH_to_Capture_Folder):
     bgr = np.dstack((b_med,g_med,r_med))
     # bgr = crop_img(bgr,0.9)
     Date = str(datetime.datetime.now()).replace("-","_").replace(" ","_").replace(":","_").replace(".","_")
-    cv2.imwrite(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\Image_Anti_Obstacle' + Date + '.png',bgr)
+    cv2.imwrite(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Flied_Image\Image_Anti_Obstacle' + Date + '.png',bgr)
     cv2.waitKey(0)
-
-# def Flush_Take_Photo(PIC):
-    
-
-
-def Flush_Capture_Photo(number):
-    cap = cv2.VideoCapture(1+cv2.CAP_DSHOW)
-    cap.set(3,1600)
-    cap.set(4,900)
-    sleep(1)
-    cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
-    _, frame = cap.read()
-    cv2.imwrite(r"C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_Communication\Rail_Photo\Photo" + str(number)+".jpg",frame)
-    cap.release()
 

@@ -18,7 +18,7 @@ def add_point_to_list(hie,list_contours_path):
                 list_contours_path.append(hie.index(i))
 
 def Flush_Taskbar(image):
-    with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\parameter.json') as json_file:
+    with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Parameter.json') as json_file:
         data = json.load(json_file)
         Parametersy = (data['Parameter'][0])
 

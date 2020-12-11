@@ -7,9 +7,11 @@ import json
 from math import sqrt
 from MTM import matchTemplates
 import skimage.exposure
+from Flush_Communication import *
 from skimage.morphology import skeletonize
 import skimage.graph
 from math import sqrt,pi,atan2,degrees,cos,sin
+
 def Sam_OOk_isas(List_Point,thres):
     re = []
     ans = []
@@ -139,7 +141,7 @@ def Targectory_Gen(x1,y1,x2,y2):
     Theta = Theta/2
     return int(r),int(Theta), int(r*cos(Theta)) , int(r*sin(Theta))
 
-def sampling(x1,y1,x2,y2,prescaler=2):
+def sampling(x1,y1,x2,y2,prescaler = 2):
     dx = x2-x1
     dy = y2-y1
     if abs( x1 - x2 ) >= abs( y1 - y2 ):
@@ -218,10 +220,12 @@ def thin_point_path(image,list_path,resolution_X,resolution_Y,contours,Kernel_mo
         filled_contour = cv2.fillPoly(blacked, [contours[i]], color=(255,255,255))
         _,filled_path_binary = cv2.threshold(filled_contour,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         filled_path_binary = cv2.dilate(filled_path_binary,Kernel_morp_use,iterations = 5 )
+        cv2.imshow("thin_img",filled_path_binary) 
+        cv2.waitKey(0) 
         thin_image = cv2.ximgproc.thinning(filled_path_binary,thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)
         point_thin = find_white_in_black(thin_image)
         Thining_Image.append(thin_image)
-        cv2.imwrite("thin_img.png",thin_image) 
+        
         for k in point_thin:
             x = k[0]
             y = k[1]
@@ -357,7 +361,7 @@ def Theta_isas(List_of_Position):
     return ans
     
 def Flush_ImageProcessing(image,list_symbol_template,method = 'thining'):
-    with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\parameter.json') as json_file:
+    with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Parameter.json') as json_file:
         data = json.load(json_file)
     Parametersy = (data['Parameter'][0])
     Point_Symbol = []

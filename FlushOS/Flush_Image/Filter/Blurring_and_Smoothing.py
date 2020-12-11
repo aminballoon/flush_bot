@@ -191,3 +191,14 @@ from math import sqrt,pi,atan2,degrees,cos,sin
 
 # c = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\Image_Anti_Obstacle2020_12_06_00_46_00_601762.png',0)
 # cv2.imwrite(r"C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\222.png",c)
+
+
+cap = cv2.VideoCapture(1+cv2.CAP_DSHOW)
+cap.set(3,1600)
+cap.set(4,900)
+cap.set(17,0)
+cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
+_, frame = cap.read()
+cv2.imshow("str(number)",frame)
+cv2.waitKey(0)
+cap.release()

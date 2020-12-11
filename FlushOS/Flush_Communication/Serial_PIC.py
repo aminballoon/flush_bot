@@ -140,8 +140,8 @@ sleep(2)
 # (400,50),(400,150),(400,250),(400,350),(400,100),(400,200),(400,300),(400,400),
 # (420,50),(420,150),(420,250),(420,350),(420,100),(420,200),(420,300),(420,400)]
 
-List_of_Position =  [(54, 335, 0, 45), (0, 0, 255, 45), (143, 334, 245, 48), (247, 323, 165, 70), (331, 218, 165, 90), (331, 147, 255, 90), 
-(331, 58, 255, 46), (260, 60, 255, 44), (51, 55, 155, 1), (59, 195, 155, 43), (105, 198, 155, 45), (180, 196, 155, 45)]
+# List_of_Position =  [(54, 335, 0, 45), (0, 0, 255, 45), (143, 334, 245, 48), (247, 323, 165, 70), (331, 218, 165, 90), (331, 147, 255, 90), 
+# (331, 58, 255, 46), (260, 60, 255, 44), (51, 55, 155, 1), (59, 195, 155, 43), (105, 198, 155, 45), (180, 196, 155, 45)]
 
 # List_of_Position = [(330, 75, 270), (230, 77, 270), (197,90, 270),(113, 240, 180), (69, 308, 170)]
 # List_of_Position = [(330, 75, 0), (0, 0, 270),(230, 77, 270), (197,90, 270),(113, 240, 180), (69, 308, 170)]
@@ -151,112 +151,112 @@ List_of_Position =  [(54, 335, 0, 45), (0, 0, 255, 45), (143, 334, 245, 48), (24
 # List_of_Position = [(329, 77, 0, 45), (0, 0, 255, 45), (238, 78, 255, 54), (200, 91, 255, 75), (111, 246, 155, 76), (75, 315, 155, 76)]
 # List_of_Position = [(329, 188, 0, 46), (0, 0, 255, 46), (265, 190, 255, 46), (120, 192, 155, 45), (55, 193, 155, 45)]
 
-# List_of_Position = [(247,199,80),(148,200,180),(68, 205,180)]
+List_of_Position = [(365,250)]
 # PIC.write(cmd('Start Timer'))
 PIC.read()
 num = 0
 
 # Start
 
-PIC.write((Flush_PositionXY(380,335))) #Move XY to pick Gripper
-while(PIC.read() != b'\xac'):
-    pass
-sleep(0.5)
-PIC.write(Flush_Command(method = 'Start timer'))
-while(PIC.read() != b'\xac'):
-    pass
-while(PIC.read() != b'\xca'):
-    pass
-sleep(1)
-Arduino.write((Flush_Position_Gripper(70)))
-while(Arduino.read() != b'\xac'):
-    pass
-while(Arduino.read() != b'\xca'): 
-    pass
-sleep(0.5)
-Arduino.write(Flush_Orentation_Gripper(45,method='bytey'))
-while(Arduino.read() != b'\xac'):
-    pass
-while(Arduino.read() != b'\xca'):
-    pass
-sleep(0.5)
-Arduino.write((Flush_Position_Z(110,4000)))
-while(Arduino.read() != b'\xac'):
-    pass
-while(Arduino.read() != b'\xca'):
-    pass
-sleep(0.5)
-Arduino.write((Flush_Position_Gripper(25)))
-while(Arduino.read() != b'\xac'):
-    pass
-while(Arduino.read() != b'\xca'):
-    pass
-sleep(0.5)
-Arduino.write((Flush_Position_Z(0,4000)))
-while(Arduino.read() != b'\xac'):
-    pass
-while(Arduino.read() != b'\xca'):
-    pass
-
-# # Gripper 
+# PIC.write((Flush_PositionXY(380,335))) #Move XY to pick Gripper
+# while(PIC.read() != b'\xac'):
+#     pass
+# sleep(0.5)
+# PIC.write(Flush_Command(method = 'Start timer'))
+# while(PIC.read() != b'\xac'):
+#     pass
+# while(PIC.read() != b'\xca'):
+#     pass
 # sleep(1)
+# Arduino.write((Flush_Position_Gripper(70)))
+# while(Arduino.read() != b'\xac'):
+#     pass
+# while(Arduino.read() != b'\xca'): 
+#     pass
+# sleep(0.5)
+# Arduino.write(Flush_Orentation_Gripper(45,method='bytey'))
+# while(Arduino.read() != b'\xac'):
+#     pass
+# while(Arduino.read() != b'\xca'):
+#     pass
+# sleep(0.5)
+# Arduino.write((Flush_Position_Z(110,4000)))
+# while(Arduino.read() != b'\xac'):
+#     pass
+# while(Arduino.read() != b'\xca'):
+#     pass
+# sleep(0.5)
+# Arduino.write((Flush_Position_Gripper(25)))
+# while(Arduino.read() != b'\xac'):
+#     pass
+# while(Arduino.read() != b'\xca'):
+#     pass
+# sleep(0.5)
+# Arduino.write((Flush_Position_Z(0,4000)))
+# while(Arduino.read() != b'\xac'):
+#     pass
+# while(Arduino.read() != b'\xca'):
+#     pass
 
-for Position in List_of_Position:
-    num += 1
-    if Position[1] == 0 and Position[0] == 0:
-        Arduino.write(Flush_Position_Z(Position[2],2500))
-        while(Arduino.read() != b'\xac'):
-            pass
-        while(Arduino.read() != b'\xca'):
-            pass
-    else:
-        
-        PIC.write((Flush_PositionXY(*Position)))
-        while(PIC.read() != b'\xac'):
-            pass
-
-        PIC.write(Flush_Command(method = 'Call time'))
-        while(PIC.read() != b'\xac'):
-            pass
-
-        Time = Decode_Data(PIC.readline())
-        print(Time)
-        if int(Time) <= 0:
-            Time = 2
-
-        Arduino.write(Flush_Position_Z(Position[2],Time))
-        while(Arduino.read() != b'\xac'):
-            pass
-
-        PIC.write(Flush_Command(method = 'Start timer'))
-        while(PIC.read() != b'\xac'):
-            pass
-        while(PIC.read() != b'\xca'):
-            pass
-        while(Arduino.read() != b'\xca'):
-            pass
-
-        Arduino.write(Flush_Orentation_Gripper(Position[3],method='bytey'))
-        while(Arduino.read() != b'\xac'):
-            pass
-        while(Arduino.read() != b'\xca'):
-            pass
-
-    sleep(2)
-
+# # # Gripper 
+# # sleep(1)
 
 # for Position in List_of_Position:
 #     num += 1
-#     PIC.write((Flush_PositionXY(*Position)))
-#     while(PIC.read() != b'\xac'):
-#         pass
-#     PIC.write(Flush_Command(method = 'Start timer'))
-#     while(PIC.read() != b'\xac'):
-#         pass
-#     while(PIC.read() != b'\xca'):
-#         pass
-#     if Position != (300,400):
-#         Flush_Take_Photo(num)
+#     if Position[1] == 0 and Position[0] == 0:
+#         Arduino.write(Flush_Position_Z(Position[2],2500))
+#         while(Arduino.read() != b'\xac'):
+#             pass
+#         while(Arduino.read() != b'\xca'):
+#             pass
+#     else:
+        
+#         PIC.write((Flush_PositionXY(*Position)))
+#         while(PIC.read() != b'\xac'):
+#             pass
+
+#         PIC.write(Flush_Command(method = 'Call time'))
+#         while(PIC.read() != b'\xac'):
+#             pass
+
+#         Time = Decode_Data(PIC.readline())
+#         print(Time)
+#         if int(Time) <= 0:
+#             Time = 2
+
+#         Arduino.write(Flush_Position_Z(Position[2],Time))
+#         while(Arduino.read() != b'\xac'):
+#             pass
+
+#         PIC.write(Flush_Command(method = 'Start timer'))
+#         while(PIC.read() != b'\xac'):
+#             pass
+#         while(PIC.read() != b'\xca'):
+#             pass
+#         while(Arduino.read() != b'\xca'):
+#             pass
+
+#         Arduino.write(Flush_Orentation_Gripper(Position[3],method='bytey'))
+#         while(Arduino.read() != b'\xac'):
+#             pass
+#         while(Arduino.read() != b'\xca'):
+#             pass
+
+#     sleep(2)
+
+
+for Position in List_of_Position:
+    num += 1
+    PIC.write((Flush_PositionXY(*Position)))
+    while(PIC.read() != b'\xac'):
+        pass
+    PIC.write(Flush_Command(method = 'Start timer'))
+    while(PIC.read() != b'\xac'):
+        pass
+    while(PIC.read() != b'\xca'):
+        pass
+    # if Position != (300,400):
+    #     Flush_Take_Photo(num)
 
 
 
