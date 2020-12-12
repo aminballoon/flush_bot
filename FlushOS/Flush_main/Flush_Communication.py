@@ -20,7 +20,7 @@ def Flush_Take_Photo(number):
     sleep(1)
     cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
     _, frame = cap.read()
-    cv2.imwrite(r"C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Flied_Image\Photo" + str(number)+".jpg",frame)
+    cv2.imwrite(r"C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Take_Photo\Photo" + str(number)+".jpg",frame)
     cap.release()
 
 def Flush_Reset(PIC):

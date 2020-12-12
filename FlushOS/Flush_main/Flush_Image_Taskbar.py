@@ -166,7 +166,7 @@ def Flush_Taskbar(image):
             'maxArea': int(maxArea)
         })
         
-        with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Capture_image\Image\parameter.json', 'w') as outfile:
+        with open(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Parameter.json', 'w') as outfile:
             json.dump(data, outfile)
 
         # data['blur'].append({
