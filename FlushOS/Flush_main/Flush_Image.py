@@ -41,11 +41,11 @@ def Sam_OOk(List_Point,thres=10):
 def find_color(img,x,y):
 	return img[y,x]
 
-def find_gradient(img,x,y,thres = 140):
+def find_gradient(img,x,y,thres = 140): # 140
     if 255 - img[y,x] > thres:
-        return 255
+        return 250
     else:
-	    return 155
+	    return 160
 
 def find_white_in_black(thin_img):
     pixels = np.argwhere(thin_img == 255)
@@ -82,7 +82,6 @@ def find_middle(x1, y1, x2, y2):
 
 def Born_To_be_Flushbot(list_cmd):
     ans = []
-    print(list_cmd)
     for i in range(len(list_cmd)-1):
         if i == 0:
             ans.append(list_cmd[0] + (0,))
@@ -136,11 +135,12 @@ def Targectory_Gen(x1,y1,x2,y2):
     r = sqrt(pow(delta_x,2)+pow(delta_y,2))
     
     Theta = atan2(delta_y,delta_x)
-    Theta = int(degrees(Theta))
+    # Theta = (Theta * 180 / 3.1412)
+    Theta = degrees(Theta)
     if Theta < 0:
         Theta += 180 
-    Theta = Theta/2
-    return int(r),int(Theta), int(r*cos(Theta)) , int(r*sin(Theta))
+    Theta = (Theta/2)
+    return int(r),90 - int(Theta), int(r*cos(Theta)) , int(r*sin(Theta))
 
 def sampling(x1,y1,x2,y2,prescaler = 2):
     dx = x2-x1
@@ -521,19 +521,15 @@ def Flush_ImageProcessing(image,list_symbol_template,method = 'thining'):
     # fill_path_image = cv2.fillPoly(black_image, [contours[1]], color=(255,255,255))
 
 
-    # Pathisas = Flush_Point_to_Control_isas(Flush_Point_Symbol,Thining_Image,Flush_Point_Symbol[-1],Flush_Point_Control,list_conner,resolution_X,resolution_Y,Thining_Image,image_gray)
-    # print("Flush_Point_Symbol : ",Flush_Point_Symbol)
-    # print("Flush_Point_Path : ",Flush_Point_Path)
-    # print("Thining_Image : ",len(Thining_Image))
-    # print("Flush_Point_Conner : ",Flush_Point_Conner)
-
     Pathisas = Flush_Point_to_Control_isas(Thining_Image,Flush_Point_Symbol,Flush_Point_Path,Flush_Point_Conner,resolution_X,resolution_Y,image_gray)
-
+    
     # Pathisas = Flush_Point_to_Control_2Thin(Flush_Point_Symbol,Flush_Point_Path,Flush_Point_Path[-1],Flush_Point_Control,list_conner,resolution_X,resolution_Y,Thining_Image)
     # Pathisas = Sam_OOk(Pathisas,thres=5)
     # print("Pathisas",Pathisas)
 
     Pathisas = Born_To_be_Flushbot(Pathisas)
+    print(Pathisas)
+    # Pathisas = [(56, 330, 0), (0, 0, 255), (146, 330, 255), (213, 329, 155), (249, 317, 155), (318, 246, 155), (330, 147, 255), (331, 55, 255), (254, 54, 255), (60, 61, 155), (60, 190, 155), (101, 194, 155), (181, 195, 155)]
     Pathisas = Theta_isas(Pathisas)
     print(Pathisas)    
 

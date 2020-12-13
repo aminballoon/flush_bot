@@ -42,6 +42,8 @@ def Flush_Photo_Club():
                 Flush_Take_Photo(num)
 
 def Flush_GOTO_Hell():
+    
+    # PIC.write((Flush_PositionXY(380,335)))
     PIC.write((Flush_PositionXY(380,200))) #Move XY to pick Gripper
     while(PIC.read() != b'\xac'):
         pass
@@ -64,13 +66,13 @@ def Flush_GOTO_Hell():
     while(Arduino.read() != b'\xca'):
         pass
     sleep(0.2)
-    Arduino.write((Flush_Position_Z(110,4000)))
+    Arduino.write((Flush_Position_Z(105,4000)))
     while(Arduino.read() != b'\xac'):
         pass
     while(Arduino.read() != b'\xca'):
         pass
     sleep(0.2)
-    Arduino.write((Flush_Position_Gripper(25)))
+    Arduino.write((Flush_Position_Gripper(20)))
     while(Arduino.read() != b'\xac'):
         pass
     while(Arduino.read() != b'\xca'):
@@ -94,6 +96,8 @@ def Flush_GOTO_Abyss(List_of_Position):
                 pass
         else:
             
+            
+
             PIC.write((Flush_PositionXY(*Position)))
             while(PIC.read() != b'\xac'):
                 pass
@@ -129,32 +133,33 @@ def Flush_GOTO_Abyss(List_of_Position):
 
 if __name__ == "__main__":
     # Delete_obstacle(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Take_Photo')
-    # Image = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Flied_Image\Image_Anti_Obstacle2020_12_12_15_44_33_856550.png')
-    # Flush_Taskbar(Image)
-    # list_symbol_template = [cv2.imread(file,0) for file in glob.glob(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Symbol\*.jpg')]
-    # PATH_Image = Flush_ImageProcessing(Image,list_symbol_template,method = "thining")
-    # cv2.imshow("PATH_Image",PATH_Image)
-    # cv2.imwrite("PATH_Image.png",PATH_Image)
-    # cv2.waitKey(0)
+    Image = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Flied_Image\Image_Anti_Obstacle2020_12_13_20_41_47_307173.png')
+    Flush_Taskbar(Image)
+    list_symbol_template = [cv2.imread(file,0) for file in glob.glob(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Symbol\*.jpg')]
+    PATH_Image = Flush_ImageProcessing(Image,list_symbol_template,method = "thining")
+    cv2.imshow("PATH_Image",PATH_Image)
+    cv2.imwrite("PATH_Image.png",PATH_Image)
+    cv2.waitKey(0)
 
-    PIC = serial.Serial(
-        port = "COM9",
-        baudrate = 115200,
-        timeout=1)
+    # PIC = serial.Serial(
+    #     port = "COM9",
+    #     baudrate = 115200,
+    #     timeout=1)
 
-    Arduino = serial.Serial(
-        port = "COM3",
-        baudrate = 115200,
-        timeout=1)
-
-    PIC.rts = 0
-    PIC.read()
-    sleep(1)
+    # Arduino = serial.Serial(
+    #     port = "COM22",
+    #     baudrate = 115200,
+    #     timeout=1)
+    
+    # PIC.rts = 0
+    # PIC.read()
+    # sleep(1)
 
     # Flush_Photo_Club()
-    Flush_GOTO_Hell()
-    List_of_Position = [(329, 57, 0, 45), (0, 0, 255, 45), (242, 58, 255, 45), (58, 61, 155, 0), (55, 241, 155, 0), (55, 329, 155, 45), (132, 329, 155, 45), (307, 326, 255, 13), (285, 282, 255, 22), (173, 170, 255, 22)]
-    Flush_GOTO_Abyss(List_of_Position)
+
+    # Flush_GOTO_Hell()
+    # List_of_Position = [(327, 58, 0, 46), (0, 0, 255, 46), (235, 56, 255, 45), (68, 59, 155, 3), (55, 237, 155, 90), (55, 329, 155, 45), (136, 329, 155, 45), (302, 326, 255, 79), (282, 279, 255, 67), (228, 227, 255, 67), (170, 171, 255, 67)]
+    # Flush_GOTO_Abyss(List_of_Position)
 
     
     
