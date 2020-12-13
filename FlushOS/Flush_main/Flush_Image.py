@@ -405,6 +405,7 @@ def Flush_Point_to_Control_isas(Thining_Image,Flush_Point_Symbol,Flush_Point_Pat
     #     cv2.imshow("ppp",black_image)
     #     cv2.waitKey(0)
     # print(path[0])
+
     for i in Flush_Point_Path[indexy]:
         
         if XytoYX(*tuple(i)) in path:
@@ -414,7 +415,7 @@ def Flush_Point_to_Control_isas(Thining_Image,Flush_Point_Symbol,Flush_Point_Pat
             xy = XytoYX(*tuple(i)) 
             dist = lambda x, y: (x[0]-y[0])**2 + (x[1]-y[1])**2
             o = min(path, key=lambda co: dist(co, xy))
-            Cons1.append([path.index(o),i])
+            Cons.append([path.index(o),i])
                
 
     # for i in Flush_Point_Path[indexy]:
@@ -425,7 +426,7 @@ def Flush_Point_to_Control_isas(Thining_Image,Flush_Point_Symbol,Flush_Point_Pat
         Pathisas.append(i[1] + (find_gradient(Image_Gray,*i[1]),))
     # print(Pathisas)
     Pathisas.append(Flush_Point_Symbol[1])
-    if len(Thining_Image) > 1:
+    if len(Thining_Image) > 1 :
         x1 = Flush_Point_Symbol[1][0]
         y1 = Flush_Point_Symbol[1][1]
         # print(Start1)
@@ -522,7 +523,7 @@ def Flush_ImageProcessing(image,list_symbol_template,method = 'thining'):
 
 
     Pathisas = Flush_Point_to_Control_isas(Thining_Image,Flush_Point_Symbol,Flush_Point_Path,Flush_Point_Conner,resolution_X,resolution_Y,image_gray)
-    
+    print(Pathisas)
     # Pathisas = Flush_Point_to_Control_2Thin(Flush_Point_Symbol,Flush_Point_Path,Flush_Point_Path[-1],Flush_Point_Control,list_conner,resolution_X,resolution_Y,Thining_Image)
     # Pathisas = Sam_OOk(Pathisas,thres=5)
     # print("Pathisas",Pathisas)
@@ -532,7 +533,8 @@ def Flush_ImageProcessing(image,list_symbol_template,method = 'thining'):
     # Pathisas = [(56, 330, 0), (0, 0, 255), (146, 330, 255), (213, 329, 155), (249, 317, 155), (318, 246, 155), (330, 147, 255), (331, 55, 255), (254, 54, 255), (60, 61, 155), (60, 190, 155), (101, 194, 155), (181, 195, 155)]
     Pathisas = Theta_isas(Pathisas)
     print(Pathisas)    
-
+#     print("Ex",[(54, 330, 0, 45), (0, 0, 250, 45), (143, 329, 250, 42), (247, 318, 160, 20), (331, 212, 160, 20), (330, 139, 240, 20), (330, 54, 250, 45), (249, 56, 250, 45), (59, 59, 160, 90), (59, 191, 155, 46), (107, 
+# 192, 160, 46), (178, 194, 160, 46)])
     return image 
     
 

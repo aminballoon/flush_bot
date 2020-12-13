@@ -133,7 +133,7 @@ def Flush_GOTO_Abyss(List_of_Position):
 
 if __name__ == "__main__":
     # Delete_obstacle(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Take_Photo')
-    Image = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Flied_Image\Image_Anti_Obstacle2020_12_13_20_41_47_307173.png')
+    Image = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Flied_Image\Image_Anti_Obstacle2020_12_14_00_44_00_456191.png')
     Flush_Taskbar(Image)
     list_symbol_template = [cv2.imread(file,0) for file in glob.glob(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Symbol\*.jpg')]
     PATH_Image = Flush_ImageProcessing(Image,list_symbol_template,method = "thining")
