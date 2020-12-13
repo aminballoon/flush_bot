@@ -42,8 +42,8 @@ def Flush_Reset(PIC):
 
 
 def Flush_GOTO_Hell():
-    # PIC.write((Flush_PositionXY(380,335)))
-    PIC.write((Flush_PositionXY(390, 200)))  # Move XY to pick Gripper
+    PIC.write((Flush_PositionXY(380,335)))
+    # PIC.write((Flush_PositionXY(390, 200)))  # Move XY to pick Gripper
     while (PIC.read() != b'\xac'):
         pass
     sleep(0.5)
@@ -184,11 +184,11 @@ class Ui_MainWindow(object):
         self.columnView_4 = QtWidgets.QColumnView(self.centralwidget)
         self.columnView_4.setGeometry(QtCore.QRect(0, 0, 1021, 581))
         self.columnView_4.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.columnView_4.setStyleSheet("image: url(\"loli.png\");")
+        self.columnView_4.setStyleSheet("background-color:pink;")
         self.columnView_4.setObjectName("columnView_4")
         self.frame = QtWidgets.QFrame(self.centralwidget)
         self.frame.setGeometry(QtCore.QRect(100, 10, 101, 71))
-        self.frame.setStyleSheet("image: url(\"BG2.png\");")
+        self.frame.setStyleSheet("image:url('lol.png')")
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
@@ -448,6 +448,7 @@ if __name__ == "__main__":
     Image = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Flied_Image\Image_Anti_Obstacle2020_12_13_20_41_47_307173.png')
     pp = cv2.imread(r'C:\Users\aminb\Documents\GitHub\flush_bot\FlushOS\Flush_main\Flush_Image\Flush_Image_UI\54258184_2158772370873790_5074657834801561600_o.jpg')
     cv2.imshow("Balloon",pp)
+
     print("PIC : " , PIC.isOpen())
     print("Arduino : ", Arduino.isOpen())
     app = QtWidgets.QApplication(sys.argv)
