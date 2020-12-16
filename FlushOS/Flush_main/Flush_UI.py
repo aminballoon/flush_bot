@@ -42,8 +42,8 @@ def Flush_Reset(PIC):
 
 
 def Flush_GOTO_Hell():
-    PIC.write((Flush_PositionXY(380,335)))
-    # PIC.write((Flush_PositionXY(390, 200)))  # Move XY to pick Gripper
+    # PIC.write((Flush_PositionXY(380,335)))
+    PIC.write((Flush_PositionXY(390, 200)))  # Move XY to pick Gripper
     while (PIC.read() != b'\xac'):
         pass
     sleep(0.5)

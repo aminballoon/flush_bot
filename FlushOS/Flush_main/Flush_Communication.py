@@ -38,7 +38,7 @@ def Flush_Reset(PIC):
 #         return bytearray(Data_Frame)
 
 def Flush_PositionXY(Position_X,Position_Y,Position_Z=0,Orentation_Z=0,method='bytey'):
-    Data_Frame = [0xBD,0x40,*bytesy(Position_X),*bytesy(Position_Y+5)]
+    Data_Frame = [0xBD,0x40,*bytesy(Position_X),*bytesy(Position_Y)]
     CheckSum = ( ~(sum(Data_Frame[1:])) % 256 ) % 256
     Data_Frame.extend([CheckSum])
     if method.lower() == 'list':
@@ -71,8 +71,7 @@ def Flush_Command(method):
 def Decode_Data(Data):
     Data = str(Data)
     Data = Data.replace("'","").replace("b","").replace('\\n','').replace('\\t',',')
-    return int(float(Data)*1000) - 300
-
+    return int(float(Data)*1000)
 
 # def Calculate_Trajectory_Time(Position_X,Position_Y):
 #     PIC.read()

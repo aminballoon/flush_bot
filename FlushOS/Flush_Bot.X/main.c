@@ -633,13 +633,15 @@ int main(void) {
 //                        printf("%.2f\t", Position_X_Goal);
 //                        printf("%.2f\t", Encoder[0]);
 //                        printf("%.2f\t", Velocity_X);
+//                        printf("%.2f\t", Velocity_Input_Kalman[0]);
 //                        printf("%.2f\t", Velocity_Kalman[0]);
 
             // print Y 
-            //            printf("%.2f\t", Position_Y_Goal);
-            //            printf("%.2f\t", Encoder[1]);
-            //            printf("%.2f\t", Velocity_Y);
-            //            printf("%.2f\t", Velocity_Kalman[1]);
+//                        printf("%.2f\t", Position_Y_Goal);
+//                        printf("%.2f\t", Encoder[1]);
+//                        printf("%.2f\t", Velocity_Y);
+//                        printf("%.2f\t", Velocity_Input_Kalman[1]);
+//                        printf("%.2f\t", Velocity_Kalman[1]);
             //
 //                        printf("\n");
             State_Print = 0;
